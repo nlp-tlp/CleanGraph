@@ -1,13 +1,23 @@
 # Graph Pruner
 
+This application has been developed for interactive graph refinement.
 
+## Client
 
-This repository contains code for the development of a single page application intended to allow a user to upload a JSON file comprised of graph triplets in `<s,s_type,r,o,o_type>` format, render a graph and then perform deletion operations on the resulting graph. The modified graph is then able to be downloaded. This essentially constitutes error correction for triplet generation. Future work may allow CRU(D) operations.
+To start the client
 
-## Basic Functionality
-- [ ] User can upload a JSON file comprised of triplets that are converted into a graph format
-- [ ] User can delete nodes and edges in the rendered graph
-- [ ] User can download the resulting graph in JSON format
+```
+    npm start
+```
 
-## Specifics
-- [ ] Graph should be stored in local storage to ensure that it is not lost if an issue occurs with the browser
+## Server
+
+To start the server:
+
+```
+    uvicorn main:app --reload
+```
+
+## Notes
+
+Requires Node 16.15 to ensure the frontend can proxy to the backend. Issues occur if using later versions.
