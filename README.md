@@ -93,11 +93,11 @@ Use CleanGraph to create, manage, and analyse your graphs. Once the app is up an
 
 ## Contributing
 
-We encourage you to contribute to CleanGraph! Please check out the [Contributing to CleanGraph guide]() for guidelines about how to proceed.
+We encourage you to contribute to CleanGraph! Please check out the [Contributing to CleanGraph guide](CONTRIBUTING.md) for guidelines about how to proceed.
 
 ## License
 
-CleanGraph is licensed under the terms of the MIT License. See [LICENSE]() for more details.
+CleanGraph is licensed under the terms of the MIT License. See [LICENSE](LICENSE.md) for more details.
 
 ## Contact
 
