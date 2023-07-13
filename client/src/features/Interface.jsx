@@ -1,21 +1,29 @@
 import "../App.css";
-import { useState, useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   CssBaseline,
   Box,
-  TablePagination,
   Paper,
   Typography,
   CircularProgress,
+  AppBar,
+  Toolbar,
+  Stack,
+  alpha,
 } from "@mui/material";
 import Graph from "./Graph";
-import Panel from "./Panel";
 import { GraphContext } from "../shared/context";
-import { DRAWER_WIDTH } from "../shared/constants";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import PrimarySidebar from "./PrimarySidebar/PrimarySidebar";
+import Pagination from "./Pagination";
+import HelperTray from "./HelperTray";
+import ReviewButton from "./ReviewButton";
+import Properties from "./PrimarySidebar/Properties";
+import { grey } from "@mui/material/colors";
+import DialogModal from "./DialogModal";
 
-function Interface() {
+const Interface = () => {
   const { graphId } = useParams();
   const [state, dispatch] = useContext(GraphContext);
 
@@ -65,110 +73,112 @@ function Interface() {
   }, [graphId]);
 
   return (
-    <Box sx={{ display: "flex" }}>
-      <CssBaseline />
-      <Box component="main" sx={{ flexGrow: 1, bgcolor: "background.default" }}>
-        {state.loading ? (
-          <Box
-            sx={{
-              width: "100vw",
-              height: "100vh",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+    <>
+      <Box sx={{ display: "flex" }}>
+        <CssBaseline />
+        <DialogModal />
+        <Box
+          component="main"
+          sx={{ flexGrow: 1, bgcolor: "background.default" }}
+        >
+          {state.loading ? (
             <Box
-              component={Paper}
               sx={{
+                width: "100vw",
+                height: "100vh",
                 display: "flex",
                 alignItems: "center",
-                flexDirection: "column",
-                maxWidth: 300,
-                textAlign: "center",
+                justifyContent: "center",
               }}
-              p={4}
-              elevation={3}
             >
-              <Typography variant="h6" gutterBottom>
-                Loading Graph
-              </Typography>
-              <CircularProgress />
+              <Box
+                component={Paper}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  flexDirection: "column",
+                  maxWidth: 300,
+                  textAlign: "center",
+                }}
+                p={4}
+              >
+                <CircularProgress />
+                <Typography variant="h6" gutterBottom>
+                  Loading Graph
+                </Typography>
+              </Box>
             </Box>
-          </Box>
-        ) : (
-          <>
-            <Graph />
-            <Panel />
-            <GraphPagination />
-          </>
-        )}
+          ) : (
+            <Box display="flex">
+              <CssBaseline />
+              <AppBar
+                position="fixed"
+                sx={{
+                  zIndex: 10001,
+                  borderBottom: "1px solid lightgrey",
+                  bgcolor: "white",
+                  color: "black",
+                }}
+                elevation={0}
+              >
+                <Toolbar>
+                  <Box
+                    display="flex"
+                    flexGrow={1}
+                    flexDirection="row"
+                    justifyContent="space-between"
+                  >
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="left"
+                      spacing={1}
+                    >
+                      <Typography fontWeight={700}>CleanGraph</Typography>
+                      <Typography>{state.graph.name}</Typography>
+                    </Stack>
+                    <Stack
+                      direction="row"
+                      justifyContent="right"
+                      alignItems="center"
+                      spacing={2}
+                    >
+                      <Pagination />
+                      <HelperTray />
+                    </Stack>
+                  </Box>
+                </Toolbar>
+              </AppBar>
+              <Box component="main" display="flex" sx={{ flexGrow: 1 }}>
+                <PrimarySidebar />
+                <Graph />
+              </Box>
+              {state.currentNode && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    right: "1rem",
+                    top: "calc(50% - 250px)",
+                    width: 300,
+                    height: 500,
+                    borderColor: grey[300],
+                    bgcolor: alpha(grey[100], 0.5),
+                    borderWidth: "1px",
+                    borderStyle: "solid",
+                    borderRadius: 4,
+                    ":hover": {
+                      bgcolor: grey[100],
+                    },
+                  }}
+                >
+                  <Properties />
+                </Box>
+              )}
+            </Box>
+          )}
+        </Box>
       </Box>
-    </Box>
-  );
-}
-
-const GraphPagination = () => {
-  const [state, dispatch] = useContext(GraphContext);
-  const { graphId } = useParams();
-
-  const [page, setPage] = useState(0);
-  const [triplesPerPage, setTriplesPerPage] = useState(10);
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-
-    console.log("page changing...");
-
-    axios
-      .get(`/graphs/${graphId}/${state.currentNode.id}`, {
-        params: { skip: newPage, limit: triplesPerPage },
-      })
-      .then((res) => {
-        dispatch({
-          type: "SET_VALUE",
-          payload: { key: "data", value: res.data },
-        });
-      });
-  };
-
-  const handleChangeTriplesPerPage = (event) => {
-    const newTriplesPerPage = parseInt(event.target.value, 10);
-    setTriplesPerPage(newTriplesPerPage);
-    setPage(0);
-
-    axios
-      .get(`/graphs/${graphId}/${state.currentNode.id}`, {
-        params: { skip: 0, limit: newTriplesPerPage },
-      })
-      .then((res) => {
-        dispatch({
-          type: "SET_VALUE",
-          payload: { key: "data", value: res.data },
-        });
-      });
-  };
-  return (
-    <Box
-      sx={{
-        position: "absolute",
-        width: `calc(100vw - ${DRAWER_WIDTH}px - 2px)`,
-        backgroundColor: "rgba(255,255,255,0.95)",
-        display: "flex",
-        justifyContent: "center",
-        bottom: 0,
-      }}
-    >
-      <TablePagination
-        component="div"
-        count={state.maxTriples}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={triplesPerPage}
-        onRowsPerPageChange={handleChangeTriplesPerPage}
-        labelRowsPerPage={"Triples per subgraph"}
-      />
-    </Box>
+    </>
   );
 };
 
