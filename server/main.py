@@ -13,6 +13,10 @@ import schemas
 from database import SessionLocal, engine
 from utils import triples_to_nls, get_node_neighbours
 
+from plugin_manager import PluginManager
+
+plugin_manager = PluginManager()
+
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -35,6 +39,31 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+@app.on_event("startup")
+async def startup_event():
+    print("Checking for plugins...")
+    plugin_manager.load_plugins("./plugins")
+
+
+@app.get("/plugins/")
+def get_plugins():
+    """Fetches available plugins for error detection models (edm) and completion models (cm)"""
+
+    plugins = plugin_manager.get_plugins()
+    plugin_names = list(plugins.keys())
+
+    if len(plugin_names) > 0:
+        return {"edm": plugin_names, "cm": plugin_names}
+    return {"edm": [], "cm": []}
+
+
+# def extract_errors():
+#     try:
+#         result = plugin.process(text)
+#     except Exception as e:
+#         print(f"Plugin {plugin.__name__} threw an exception: {e}")
 
 
 @app.post("/graph/", response_model=schemas.Graph)
@@ -69,6 +98,9 @@ def read_graph_data(
     limit: int = 10,
     db: Session = Depends(get_db),
 ):
+    """
+    Samples subgraphs based on graph_id and node_id.
+    """
 
     triples, max_triples, node = crud.get_graph_triples(
         db, graph_id=graph_id, node_id=node_id, skip=skip, limit=limit
@@ -77,12 +109,27 @@ def read_graph_data(
     nodes, links = triples_to_nls(triples)
     neighbours = get_node_neighbours(nodes=nodes, links=links)
 
+    reviewed = (
+        db.query(models.Triple)
+        .filter(
+            or_(
+                models.Triple.subj_id == node_id,
+                models.Triple.obj_id == node_id,
+            ),
+            models.Triple.is_reviewed,
+        )
+        .all()
+    )
+
+    review_prog = len(reviewed) / max_triples
+
     return schemas.GraphDataWithFocusNode(
         nodes=nodes,
         links=links,
         neighbours=neighbours,
         node=node,
         max_triples=max_triples,
+        reviewed=review_prog,
     )
 
 
@@ -93,6 +140,9 @@ def sample_graph_data(
     limit: int = 10,
     db: Session = Depends(get_db),
 ):
+    """
+    Randomly samples subgraph. Used for first graph loaded on UI.
+    """
 
     triples, max_triples, node = crud.get_graph_triples(
         db, graph_id=graph_id, skip=skip, limit=limit, do_sample=True
@@ -101,12 +151,27 @@ def sample_graph_data(
     nodes, links = triples_to_nls(triples)
     neighbours = get_node_neighbours(nodes=nodes, links=links)
 
+    reviewed = (
+        db.query(models.Triple)
+        .filter(
+            or_(
+                models.Triple.subj_id == node.id,
+                models.Triple.obj_id == node.id,
+            ),
+            models.Triple.is_reviewed,
+        )
+        .all()
+    )
+
+    review_prog = len(reviewed) / max_triples
+
     return schemas.GraphDataWithFocusNode(
         nodes=nodes,
         links=links,
         neighbours=neighbours,
         node=node,
         max_triples=max_triples,
+        reviewed=review_prog,
     )
 
 
@@ -178,7 +243,9 @@ def merge_graph(
 
 @app.patch("/graphs/node/review/{node_id}")
 def review_graph(node_id: int, is_reviewed: bool, db: Session = Depends(get_db)):
-    """Sets state of given node and its relations and 1-hop neighbours reviewed state."""
+    """Sets state of given node, its relations and 1-hop neighbours reviewed state."""
+
+    print(node_id, is_reviewed)
 
     triples = (
         db.query(models.Triple)
