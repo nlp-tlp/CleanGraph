@@ -3,3 +3,7 @@ node_modules
 
 __pycache__
 *.db
+
+DOCS.md
+TODO.md
+settings.json
