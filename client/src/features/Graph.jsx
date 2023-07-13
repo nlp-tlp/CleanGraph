@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useContext } from "react";
 import { ForceGraph2D } from "react-force-graph";
-import { Grid, Paper, Skeleton, Box, LinearProgress } from "@mui/material";
-import { grey } from "@mui/material/colors";
+import { Grid, Paper, Skeleton } from "@mui/material";
+import { orange } from "@mui/material/colors";
 import { alpha } from "@mui/material";
 import * as d3 from "d3";
 import { colorShade, getFontColor } from "../shared/utils";
@@ -11,7 +11,6 @@ import {
   DEACTIVATE_BORDER_COLOR,
   REVIEWED_BORDER_COLOR,
 } from "../shared/constants";
-
 import { GraphContext } from "../shared/context";
 
 const Graph = () => {
@@ -31,7 +30,7 @@ const Graph = () => {
     if (node !== null) {
       const height = node.offsetHeight;
       const width = node.offsetWidth;
-      console.log("height", height, "width", width);
+      // console.log("height", height, "width", width);
       setHeight(height);
       setWidth(width);
     }
@@ -336,11 +335,11 @@ const Graph = () => {
         container
         sx={{ height: "100vh" }}
         component={Paper}
-        variant="outlined"
         justifyContent="center"
         alignItems="center"
         ref={graphBoxRef}
         square
+        elevation={0}
       >
         <ForceGraph2D
           ref={graphRef}
@@ -350,24 +349,36 @@ const Graph = () => {
           cooldownTicks={100}
           onEngineStop={() => {
             if (graphLoaded) {
-              console.log("centering graph");
+              // console.log("centering graph");
               setInitialCenter(false);
             }
             dispatch({ type: "SET_LOADING", payload: false });
+          }}
+          onBackgroundClick={(e) => {
+            console.log("clicked graph background");
+
+            // Unselect any currently selected items
+            dispatch({
+              type: "SET_VALUE",
+              payload: {
+                key: "currentNode",
+                value: null,
+              },
+            });
           }}
           onNodeDrag={handleNodeDrag}
           onNodeDragEnd={handleNodeDragEnd}
           // onNodeRightClick={handleNodeRemove}
           // onLinkRightClick={handleLinkRemove}
-          onNodeClick={(n) =>
+          onNodeClick={(n) => {
             dispatch({
               type: "SET_VALUE",
               payload: {
                 key: "currentNode",
-                value: n,
+                value: state.currentNode?.id === n.id ? null : n,
               },
-            })
-          }
+            });
+          }}
           nodeOpacity={0.1}
           d3AlphaDecay={0.03}
           d3VelocityDecay={0.2}
@@ -377,7 +388,7 @@ const Graph = () => {
           nodeRelSize={NODE_SIZE}
           nodeVal={(node) => node.value}
           nodeLabel={(node) =>
-            `<span style="display: flex; justify-content: center;">${node.name}</br>[${node.type}]</br>${node.value}</span>`
+            `<div style="text-align: center"><span>${node.name}</br>[${node.type}]</br>${node.value}</span></div>`
           }
           linkVisibility={(link) => linkIsHighlighted(link.id)}
           linkCurvature="curvature"
@@ -385,13 +396,13 @@ const Graph = () => {
             `(${link.source.name})-[${link.type}]->(${link.target.name})`
           }
           linkWidth={2}
-          linkColor={(link) =>
-            link.is_reviewed
-              ? alpha(REVIEWED_BORDER_COLOR, 0.5)
-              : link.is_active
-              ? link.color
-              : DEACTIVATE_BORDER_COLOR
-          }
+          // linkColor={(link) =>
+          //   link.is_reviewed
+          //     ? alpha(REVIEWED_BORDER_COLOR, 0.5)
+          //     : link.is_active
+          //     ? link.color
+          //     : DEACTIVATE_BORDER_COLOR
+          // }
           linkDirectionalArrowColor={(link) =>
             link.is_active ? link.color : DEACTIVATE_BORDER_COLOR
           }
@@ -400,8 +411,6 @@ const Graph = () => {
           linkLineDash={(l) => (!l.is_active || l.is_reviewed) && [6, 8]}
           enableNodeDrag={true}
           nodeCanvasObject={(node, ctx, globalScale) => {
-            // console.log("node", node);
-
             const fontSize = (14 * Math.cbrt(node.value)) / globalScale ** 0.6;
 
             const nodeSize = NODE_SIZE * Math.cbrt(node.value);
@@ -409,23 +418,24 @@ const Graph = () => {
             ctx.beginPath();
             ctx.arc(node.x, node.y, nodeSize, 0, 2 * Math.PI, false);
             ctx.fillStyle = node.is_active
-              ? alpha(colorShade(node.color, 25), 0.95)
+              ? alpha(colorShade(node.color, 25), 1)
               : colorShade(node.color, 90);
             ctx.fill();
 
             // Create inner node circle
-
             if (node.is_reviewed) {
-              // ctx.beginPath();
-              // ctx.setLineDash([8, 10]);
-              // ctx.beginPath();
-              // ctx.arc(node.x, node.y, nodeSize - 0.5, 0, 2 * Math.PI, false);
-              // ctx.lineWidth = 5;
-              // ctx.closePath();
-              // ctx.stroke();
-              ctx.strokeStyle = alpha(REVIEWED_BORDER_COLOR, 0.5);
+              ctx.setLineDash([8, 10]);
+              ctx.strokeStyle = alpha(REVIEWED_BORDER_COLOR, 0.75);
               ctx.beginPath();
               ctx.arc(node.x, node.y, nodeSize * 1.15, 0, 2 * Math.PI, false);
+              ctx.lineWidth = nodeSize * 0.075;
+              ctx.stroke();
+              ctx.setLineDash([]);
+            }
+            if (state.currentNode?.id === node.id) {
+              ctx.strokeStyle = alpha(node.color, 0.5);
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, nodeSize * 1.3, 0, 2 * Math.PI, false);
               ctx.lineWidth = nodeSize * 0.075;
               ctx.stroke();
             }
@@ -438,6 +448,34 @@ const Graph = () => {
             ctx.lineWidth = node.is_active ? 3 : 5;
             ctx.stroke();
             ctx.restore();
+
+            // Draw triangle on top right corner
+            const triangleSize = 40; // adjust the size of the triangle as needed
+            const triangleHeight = (Math.sqrt(3) / 2) * triangleSize;
+
+            ctx.beginPath();
+            ctx.moveTo(
+              node.x + nodeSize + triangleSize / 2,
+              node.y - nodeSize - triangleHeight
+            ); // top vertex
+            ctx.lineTo(node.x + nodeSize, node.y - nodeSize); // bottom left vertex
+            ctx.lineTo(node.x + nodeSize + triangleSize, node.y - nodeSize); // bottom right vertex
+            ctx.closePath();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = orange[700];
+            ctx.stroke();
+            ctx.fillStyle = orange[300]; // set the color of the triangle as needed
+            ctx.fill();
+
+            // Draw number in the center of the triangle
+            const triangleCenterX = node.x + nodeSize + triangleSize / 2;
+            const triangleCenterY = node.y - nodeSize - triangleHeight / 3;
+            const triangleNumber = 5; // replace with the number you want to draw
+            ctx.font = `${triangleSize * 0.5}px Sans-Serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "black";
+            ctx.fillText(triangleNumber, triangleCenterX, triangleCenterY);
 
             // Text
             ctx.font = `${fontSize}px Sans-Serif`;
@@ -470,6 +508,80 @@ const Graph = () => {
             }
           }}
           linkCanvasObjectMode={() => "after"}
+          linkCanvasObject={(link, ctx, globalScale) => {
+            const lineWidth = (14 * Math.cbrt(link.value)) / globalScale ** 0.6;
+
+            // Calculate the distance between the source and target nodes
+            const dx = link.target.x - link.source.x;
+            const dy = link.target.y - link.source.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // Calculate the normalized direction vector
+            const dirX = dx / dist;
+            const dirY = dy / dist;
+
+            // Adjust the position of the source and target nodes by their radii
+            const sourceRadius = NODE_SIZE * Math.cbrt(link.source.value);
+            const targetRadius = NODE_SIZE * Math.cbrt(link.target.value);
+            const startX = link.source.x + dirX * sourceRadius;
+            const startY = link.source.y + dirY * sourceRadius;
+            const endX = link.target.x - dirX * targetRadius;
+            const endY = link.target.y - dirY * targetRadius;
+
+            // Calculate adjusted midpoint
+            const midX = (startX + endX) / 2;
+            const midY = (startY + endY) / 2;
+
+            // Draw the line
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = link.is_reviewed
+              ? alpha(REVIEWED_BORDER_COLOR, 0.5)
+              : link.is_active
+              ? link.color
+              : DEACTIVATE_BORDER_COLOR;
+            //  = link.color; //getLinkColor(link);
+            ctx.lineWidth = lineWidth;
+            ctx.stroke();
+
+            // Draw the triangle on the midpoint
+            const triangleSize = 40; // adjust the size as needed
+            const triangleHeight = (Math.sqrt(3) / 2) * triangleSize;
+
+            // Save the current context
+            ctx.save();
+
+            // Move to the midpoint and rotate the context
+            ctx.translate(midX, midY);
+            ctx.rotate(Math.atan2(dy, dx));
+
+            // Offset the triangle
+            ctx.translate(0, -0.25 * triangleHeight);
+
+            // Draw the triangle
+            ctx.beginPath();
+            ctx.moveTo(triangleSize / 2, -triangleHeight); // top vertex
+            ctx.lineTo(0, 0); // bottom left vertex
+            ctx.lineTo(triangleSize, 0); // bottom right vertex
+            ctx.closePath();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = orange[700];
+            ctx.stroke();
+            ctx.fillStyle = orange[300]; // set the color as needed
+            ctx.fill();
+
+            // Draw number in the center of the triangle
+            const triangleNumber = 5; // replace with the number you want to draw
+            ctx.font = `${triangleSize * 0.5}px Sans-Serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "black";
+            ctx.fillText(triangleNumber, triangleSize / 2, -triangleHeight / 3);
+
+            // Restore the context to its original state
+            ctx.restore();
+          }}
         />
       </Grid>
     );
