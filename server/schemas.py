@@ -94,6 +94,9 @@ class Triple(BaseModel):
 
 class GraphBase(BaseModel):
     name: str
+    edges_visible: bool = (
+        False  # Indicates whether relations should have label names visible
+    )
 
 
 class GraphCreate(GraphBase):
@@ -108,6 +111,7 @@ class Graph(GraphBase):
     ontology: List[Ontology]
     nodes: list  # Optional[List[Node]]
     # triples: List[Triple]
+    edges_visible: bool
 
     class Config:
         orm_mode = True
@@ -122,3 +126,4 @@ class GraphData(BaseModel):
 class GraphDataWithFocusNode(GraphData):
     node: Node
     max_triples: int
+    reviewed: Optional[float]
