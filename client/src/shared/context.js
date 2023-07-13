@@ -1,12 +1,8 @@
-import { useReducer, createContext, useEffect } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { TEST_DATA } from "./data";
-import { getRandomColor, getNodeNeighbours, sortSubgraphs } from "./utils";
-import axios from "axios";
+import { useReducer, createContext } from "react";
+import { sortSubgraphs } from "./utils";
 
 const initialState = {
   loading: true,
-  graphsLoaded: false,
   graphs: [],
   graph: { name: "", createdAt: "" },
   data: { nodes: [], links: [], neighbours: [] },
@@ -17,10 +13,14 @@ const initialState = {
   ontologyName2Id: {},
   centralNode: null, // This is the central node of the rendered subgraph
   currentNode: null, // This is the central node for the rendered subgraph
+  currentItem: null, // This is the current item selected (node or edge)
   maxTriples: 0,
-
   selectedNodeId: null,
   leftClickNodeInfo: null,
+  modal: {
+    open: false,
+    view: null,
+  },
 };
 
 export const GraphContext = createContext();
@@ -63,139 +63,84 @@ const reducer = (state, action) => {
         sortType: action.payload.sortType,
         sortDescending: action.payload.sortDescending,
       };
-    // case "LOAD_DATA":
-    //   // Converts JSON data to nodes/edges
-    //   // console.log("processing data");
+    case "UPDATE_NODE":
+      // Update properties of node and it's associated links.
+      let { id: nodeId, ...newNodeValues } = action.payload;
 
-    //   // console.log(TEST_DATA);
+      // Get original node
+      const originalNode = state.data.nodes.find((n) => n.id === nodeId);
 
-    //   const testData = TEST_DATA.slice(0, state.limit);
+      // If node type changed, update color based on ontology
+      if (newNodeValues.type !== originalNode.type) {
+        const matchingOntologyItem = state.ontology.find(
+          (i) => i.id === newNodeValues.type
+        );
+        if (matchingOntologyItem) {
+          newNodeValues.color = matchingOntologyItem.color;
+        }
+      }
 
-    //   // Create nodes (these are unique based on their text and type)
-    //   const nodes = testData.flatMap((t) => [
-    //     { label: t["subj"], class: t["subj_type"] },
-    //     { label: t["obj"], class: t["obj_type"] },
-    //   ]);
-    //   console.log("total nodes", nodes.length);
+      const updatedNode = {
+        ...originalNode,
+        ...newNodeValues,
+        type: newNodeValues.typeName,
+      };
 
-    //   var unique_nodes = nodes.reduce((unique, o) => {
-    //     if (
-    //       !unique.some((obj) => obj.label === o.label && obj.class === o.class)
-    //     ) {
-    //       unique.push(o);
-    //     }
-    //     return unique;
-    //   }, []);
-    //   // console.log("unique nodes", unique_nodes.length);
+      // Update nodes with updated node
+      const updatedNodes = state.data.nodes.map((n) =>
+        n.id === nodeId ? updatedNode : n
+      );
 
-    //   // Create colors for node types
-    //   const node_classes = [
-    //     ...new Set(unique_nodes.map((n) => n.class.split("/")[0])),
-    //   ];
-    //   // console.log("node_classes", node_classes);
+      // Update links
+      const updatedLinks = state.data.links.map((l) => ({
+        ...l,
+        source: l.source.id,
+        target: l.target.id,
+      }));
 
-    //   const node_color_map = Object.assign(
-    //     {},
-    //     ...node_classes.map((nc) => ({
-    //       [nc]: getRandomColor(1337),
-    //     }))
-    //   );
+      return {
+        ...state,
+        data: { ...state.data, nodes: updatedNodes, links: updatedLinks },
+        currentNode: updatedNode,
+      };
 
-    //   // console.log("node_color_map", node_color_map);
-
-    //   // Add ids to unique nodes
-    //   unique_nodes = unique_nodes.map((n, index) => ({
-    //     ...n,
-    //     id: uuidv4(),
-    //     color: {
-    //       border: node_color_map[n.class.split("/")[0]],
-    //       background: node_color_map[n.class.split("/")[0]],
-    //     },
-    //     font: {
-    //       color: "black",
-    //     },
-    //     active: true,
-    //   }));
-    //   // console.log(unique_nodes);
-
-    //   // Create links between nodes {source: nId, target: nId, label: str}
-
-    //   const unique_links = Object.assign(
-    //     {},
-    //     ...[...new Set(testData.map((t) => t.relation))].map(
-    //       (label, index) => ({
-    //         [label]: getRandomColor(2448),
-    //       })
-    //     )
-    //   );
-
-    //   const links = testData.map((t) => ({
-    //     source: unique_nodes.filter(
-    //       (n) => n.label === t.subj && n.class === t.subj_type
-    //     )[0].id,
-    //     target: unique_nodes.filter(
-    //       (n) => n.label === t.obj && n.class === t.obj_type
-    //     )[0].id,
-    //     label: t.relation,
-    //     id: uuidv4(),
-    //     color: unique_links[t.relation],
-    //     active: true,
-    //   }));
-
-    //   // console.log("links", links);
-
-    //   // console.log("unique_links", unique_links);
-
-    //   // console.log({ nodes: unique_nodes, links: links });
-
-    //   // Get relationships to help user isolate graph information
-    //   const neighbours = getNodeNeighbours(unique_nodes, links);
-    //   // console.log("neighbours", neighbours);
-
-    //   //   Update value of nodes; this is their degree
-    //   unique_nodes = unique_nodes.map((n) => ({
-    //     ...n,
-    //     value: neighbours[n.id].links.length,
-    //   }));
-
-    //   return {
-    //     ...state,
-    //     data: { nodes: unique_nodes, links: links, neighbours: neighbours },
-    //     prevStateData: {
-    //       nodes: unique_nodes,
-    //       links: links,
-    //       neighbours: neighbours,
-    //     },
-    //     originalData: { nodes: unique_nodes, links: links },
-    //     legend: { nodes: node_color_map, edges: unique_links },
-    //     subgraphs: subgraphs,
-    //     loading: false,
-    //     currentTripletCount: links.length,
-    //   };
+    case "TOGGLE_MODAL":
+      if (!action.payload || action.payload.view === undefined) {
+        // if no view is supplied, close the modal
+        return {
+          ...state,
+          modal: {
+            ...state.modal,
+            view: null,
+            open: false,
+          },
+        };
+      } else if (state.modal.view === action.payload.view) {
+        // if the current view is already open, toggle it
+        return {
+          ...state,
+          modal: {
+            ...state.modal,
+            open: !state.modal.open,
+          },
+        };
+      } else {
+        // open the new view
+        return {
+          ...state,
+          modal: {
+            view: action.payload.view,
+            open: true,
+          },
+        };
+      }
+    default:
+      return {};
   }
 };
 
 export const GraphProvider = (props) => {
   const [state, dispatch] = useReducer(reducer, initialState);
-
-  useEffect(() => {
-    const fetchGraphs = async () => {
-      if (!state.graphsLoaded) {
-        console.log("Loading graphs...");
-        await axios.get("/graphs/").then((res) => {
-          dispatch({
-            type: "SET_VALUE",
-            payload: { key: "graphs", value: res.data },
-          });
-          dispatch({
-            type: "SET_VALUE",
-            payload: { key: "graphsLoaded", value: true },
-          });
-        });
-      }
-    };
-    fetchGraphs();
-  }, [state.graphsLoaded]);
 
   return (
     <GraphContext.Provider value={[state, dispatch]}>
