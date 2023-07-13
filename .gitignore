@@ -7,3 +7,5 @@ __pycache__
 DOCS.md
 TODO.md
 settings.json
+
+.env
