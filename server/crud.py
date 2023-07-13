@@ -19,7 +19,14 @@ def create_graph(
     Creates graph and associated ontologies, and then populates graph with triples.
     """
     # Create graph object
-    db_graph = models.Graph(name=graph.name)
+    db_graph = models.Graph(
+        name=graph.name,
+        start_node_count=len(triples) * 2,
+        start_edge_count=len(triples),
+    )
+
+    print("create db_graph", db_graph)
+
     db.add(db_graph)
     db.commit()
     db.refresh(db_graph)
@@ -158,7 +165,6 @@ def create_graph(
 
 
 def get_graph(db: Session, graph_id: int):
-
     graph = db.query(models.Graph).filter(models.Graph.id == graph_id).first()
 
     print(graph.nodes[0])
