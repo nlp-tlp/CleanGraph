@@ -24,6 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { styled, useTheme } from "@mui/material/styles";
+import { orange } from "@mui/material/colors";
 
 const CustomTextField = styled(TextField)({
   backgroundColor: "white",
@@ -175,6 +176,7 @@ const Properties = () => {
                 </AccordionDetails>
               </Accordion>
             </Box>
+
             <Box
               sx={{ display: "flex", justifyContent: "right", width: "100%" }}
             >
@@ -194,6 +196,30 @@ const Properties = () => {
             <Typography>Nothing Selected</Typography>
           </Box>
         )}
+      </Box>
+      <Box p={1}>
+        <Accordion
+          variant="outlined"
+          style={{ borderColor: orange[200], backgroundColor: orange[100] }}
+        >
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="error-content"
+            id="error-header"
+          >
+            <Typography>Errors</Typography>
+          </AccordionSummary>
+          <AccordionDetails
+            style={{ overflowY: "auto", maxHeight: 100 }}
+            // sx={{ height: "calc(100% - 50px)", overflowY: "auto" }}
+          >
+            <Typography>
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+              Suspendisse malesuada lacus ex, sit amet blandit leo lobortis
+              eget.
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
       </Box>
       <Divider />
       <Box p={1}>
