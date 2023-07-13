@@ -11,10 +11,13 @@ class Graph(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
+    edges_visible = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.datetime.now)
     last_updated = Column(
         DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
     )
+    start_node_count = Column(Integer, nullable=False)
+    start_edge_count = Column(Integer, nullable=False)
 
     triples = relationship("Triple", back_populates="graph", cascade="all,delete")
     ontology = relationship("Ontology", back_populates="graph", cascade="all,delete")
