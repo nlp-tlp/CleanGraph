@@ -1,0 +1,10 @@
+site_name: CleanGraph
+site_author: Tyler Bikaun
+nav:
+  - Home: index.md
+  - Getting Started: getting_started.md
+  - User Guide: user_guide.md
+  - Plugins: plugins.md
+  - Contact: contact.md
+theme:
+  name: material
