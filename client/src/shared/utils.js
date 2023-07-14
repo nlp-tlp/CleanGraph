@@ -103,6 +103,11 @@ export const sortSubgraphs = (
       return subgraphs.sort((a, b) =>
         sortDescending ? a.value - b.value : b.value - a.value
       );
+    case "errors":
+      return subgraphs.sort((a, b) =>
+        sortDescending ? a.errors - b.errors : b.errors - a.errors
+      );
+
     default:
       return subgraphs;
   }
