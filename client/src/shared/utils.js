@@ -107,6 +107,12 @@ export const sortSubgraphs = (
       return subgraphs.sort((a, b) =>
         sortDescending ? a.errors - b.errors : b.errors - a.errors
       );
+    case "suggestions":
+      return subgraphs.sort((a, b) =>
+        sortDescending
+          ? a.suggestions - b.suggestions
+          : b.suggestions - a.suggestions
+      );
 
     default:
       return subgraphs;
