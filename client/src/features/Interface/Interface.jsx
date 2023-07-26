@@ -1,4 +1,3 @@
-import "../App.css";
 import { useContext, useEffect, useState } from "react";
 import {
   CssBaseline,
@@ -11,66 +10,70 @@ import {
   Stack,
   alpha,
 } from "@mui/material";
-import Graph from "./Graph";
-import { GraphContext } from "../shared/context";
-import { useParams } from "react-router-dom";
-import axios from "axios";
-import PrimarySidebar from "./PrimarySidebar/PrimarySidebar";
+import Graph from "../Graph";
+import { GraphContext } from "../../shared/context";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import PrimarySidebar from "../PrimarySidebar/PrimarySidebar";
 import Pagination from "./Pagination";
-import HelperTray from "./HelperTray";
+import HelperTray from "../HelperTray";
 import ReviewButton from "./ReviewButton";
-import Properties from "./PrimarySidebar/Properties";
+import Properties from "../Properties";
 import { grey } from "@mui/material/colors";
-import DialogModal from "./DialogModal";
+import DialogModal from "../DialogModal";
+import { getSampleSubgraph, getGraphData } from "../../shared/api";
+import { SnackbarContext } from "../../shared/snackbarContext";
+import { ZIndexes } from "../../shared/constants";
 
 const Interface = () => {
   const { graphId } = useParams();
   const [state, dispatch] = useContext(GraphContext);
+  const { openSnackbar } = useContext(SnackbarContext);
+  const navigate = useNavigate();
+
+  let [searchParams, setSearchParams] = useSearchParams();
+
+  const centralNodeId = searchParams.get("centralNodeId");
+  const limit = searchParams.get("limit") ?? state.settings.graph.limit;
+  const [page, setPage] = useState(searchParams.get("page") ?? 0);
+
+  console.log("centralNodeId", centralNodeId, "limit", limit, "page", page);
 
   useEffect(() => {
     const fetchGraphData = async () => {
-      await axios.get(`/sample/${graphId}`).then((res) => {
-        dispatch({ type: "SET_GRAPH", payload: res.data });
-        dispatch({
-          type: "SET_LOADING",
-          payload: false,
-        });
-      });
+      try {
+        const response = await getSampleSubgraph(graphId);
+
+        if (response.status === 200) {
+          dispatch({ type: "SET_SUBGRAPH", payload: response.data });
+        }
+      } catch (err) {
+        openSnackbar("error", "Error", "Error fetching graph data");
+        navigate("/home");
+      }
     };
 
     const fetchGraph = async () => {
-      await axios.get(`/graphs/${graphId}`).then((res) => {
-        dispatch({
-          type: "SET_VALUE",
-          payload: { key: "ontology", value: res.data.ontology },
-        });
-        dispatch({
-          type: "SET_VALUE",
-          payload: {
-            key: "ontologyName2Id",
-            value: Object.assign(
-              {},
-              ...res.data.ontology.map((i) => ({ [i.name]: i.id }))
-            ),
-          },
-        });
-        dispatch({
-          type: "SET_VALUE",
-          payload: { key: "subgraphs", value: res.data.nodes },
-        });
-        dispatch({
-          type: "SET_VALUE",
-          payload: {
-            key: "graph",
-            value: { name: res.data.name, createdAt: res.data.created_at },
-          },
-        });
-      });
+      try {
+        const res = await getGraphData(graphId);
+        dispatch({ type: "SET_GRAPH", payload: res.data });
+        fetchGraphData();
+      } catch (err) {
+        openSnackbar("error", "Error", "Error fetching graph");
+        navigate("/home");
+      }
     };
 
-    fetchGraphData();
     fetchGraph();
   }, [graphId]);
+
+  useEffect(() => {
+    setSearchParams((prevState) => ({
+      ...prevState,
+      centralNodeId: state.centralNodeId,
+      limit: state.settings.graph.limit,
+      page: page,
+    }));
+  }, [state.centralNodeId, state.settings.graph.limit, page]);
 
   return (
     <>
@@ -114,7 +117,7 @@ const Interface = () => {
               <AppBar
                 position="fixed"
                 sx={{
-                  zIndex: 10001,
+                  zIndex: ZIndexes.level2,
                   borderBottom: "1px solid lightgrey",
                   bgcolor: "white",
                   color: "black",
@@ -143,7 +146,7 @@ const Interface = () => {
                       alignItems="center"
                       spacing={2}
                     >
-                      <Pagination />
+                      <Pagination page={page} setPage={setPage} />
                       <HelperTray />
                     </Stack>
                   </Box>
@@ -153,14 +156,14 @@ const Interface = () => {
                 <PrimarySidebar />
                 <Graph />
               </Box>
-              {state.currentNode && (
+              {state.currentItemId && (
                 <Box
                   sx={{
                     position: "absolute",
                     right: "1rem",
                     top: "calc(50% - 250px)",
-                    width: 300,
-                    height: 500,
+                    maxWidth: 360,
+                    maxHeight: 700,
                     borderColor: grey[300],
                     bgcolor: alpha(grey[100], 0.5),
                     borderWidth: "1px",
@@ -174,6 +177,9 @@ const Interface = () => {
                   <Properties />
                 </Box>
               )}
+              <Box sx={{ position: "absolute", right: "1.5rem", top: "80px" }}>
+                <ReviewButton />
+              </Box>
             </Box>
           )}
         </Box>
