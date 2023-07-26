@@ -3,7 +3,6 @@ import { useContext, useEffect, useState } from "react";
 import {
   CssBaseline,
   Box,
-  Button,
   Paper,
   List,
   ListItem,
@@ -16,35 +15,49 @@ import {
   Divider,
   Stack,
   Tooltip,
-  alpha,
   useTheme,
 } from "@mui/material";
 import HubIcon from "@mui/icons-material/Hub";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { GraphContext } from "../shared/context";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
-import { purple } from "@mui/material/colors";
 import ArticleIcon from "@mui/icons-material/Article";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
+import moment from "moment";
+import { DocsURL } from "../shared/misc";
+import { getGraphs, deleteGraph } from "../shared/api";
+import { SnackbarContext } from "../shared/snackbarContext";
 
 const Home = () => {
   const [state, dispatch] = useContext(GraphContext);
   const [loading, setLoading] = useState(true);
   const theme = useTheme();
+  const { openSnackbar } = useContext(SnackbarContext);
 
   useEffect(() => {
     const fetchGraphs = async () => {
       if (loading) {
-        await axios.get("/graphs/").then((res) => {
-          dispatch({
-            type: "SET_VALUE",
-            payload: { key: "graphs", value: res.data },
-          });
+        try {
+          const response = await getGraphs();
+          if (response.status === 200) {
+            dispatch({
+              type: "SET_GRAPHS",
+              payload: response.data,
+            });
+            // dispatch({
+            //   type: "SET_VALUE",
+            //   payload: { key: "graphs", value: response.data },
+            // });
+            setLoading(false);
+          } else {
+            throw new Error();
+          }
+        } catch (error) {
+          openSnackbar("error", "Error", "Failed to retrieve graphs");
+        } finally {
           setLoading(false);
-        });
-        setLoading(false);
+        }
       }
     };
     fetchGraphs();
@@ -56,9 +69,9 @@ const Home = () => {
         <Tooltip title="Navigate to the CleanGraph Documentation">
           <IconButton
             component="a"
-            // href=""
-            // target="_blank"
-            // rel="noopener noreferrer"
+            href={DocsURL}
+            target="_blank"
+            rel="noopener noreferrer"
             sx={{
               ":hover": {
                 color: theme.palette.primary.darker,
@@ -102,19 +115,22 @@ const GraphSelection = ({ loading }) => {
   const [state, dispatch] = useContext(GraphContext);
   const [deleting, setDeleting] = useState();
   const theme = useTheme();
+  const { openSnackbar } = useContext(SnackbarContext);
 
   const handleDelete = async (graphId) => {
-    setDeleting(graphId);
-    await axios
-      .delete(`/graphs/${graphId}`)
-      .then((res) => {
-        if (res.status === 200) {
-          dispatch({ type: "DELETE_GRAPH", payload: { graphId } });
-        }
-      })
-      .finally(() => {
-        setDeleting();
-      });
+    try {
+      setDeleting(graphId);
+      const response = await deleteGraph(graphId);
+      if (response.status === 200) {
+        dispatch({ type: "DELETE_GRAPH", payload: { graphId } });
+      } else {
+        throw new Error();
+      }
+    } catch (error) {
+      openSnackbar("error", "Error", "Unable to delete graph");
+    } finally {
+      setDeleting();
+    }
   };
 
   return (
@@ -136,7 +152,7 @@ const GraphSelection = ({ loading }) => {
           flexDirection: "column",
         }}
       >
-        <Box sx={{ maxHeight: 600, overflowY: "auto" }}>
+        <Box>
           <Box p={2}>
             <Stack
               direction="row"
@@ -154,7 +170,13 @@ const GraphSelection = ({ loading }) => {
             </Stack>
           </Box>
           <Divider />
-          <Box p={2} alignItems="center" display="flex" justifyContent="center">
+          <Box
+            p={2}
+            alignItems="center"
+            display="flex"
+            justifyContent="center"
+            sx={{ maxHeight: 500, overflowY: "auto" }}
+          >
             {loading ? (
               <Box p={2}>
                 <Stack direction="column" spacing={2} alignItems="center">
@@ -180,48 +202,53 @@ const GraphSelection = ({ loading }) => {
               </Box>
             ) : (
               <>
-                <List
-                  sx={{ width: "100%" }} //maxWidth: 360
-                  component="nav"
-                >
-                  {state.graphs.map((g, index) => (
-                    <ListItem
-                      key={index}
-                      disablePadding
-                      secondaryAction={
-                        <>
-                          {deleting === g.id ? (
-                            <Box
-                              display="flex"
-                              alignItems="center"
-                              justifyContent="center"
-                            >
-                              <CircularProgress size={16} />
-                            </Box>
-                          ) : (
-                            <IconButton
-                              edge="end"
-                              aria-label="graph-delete"
-                              title="Click to delete graph"
-                              onClick={() => handleDelete(g.id)}
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          )}
-                        </>
-                      }
-                    >
-                      <ListItemButton component={Link} to={`/${g.id}`}>
-                        <ListItemIcon>
-                          <HubIcon />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={g.name}
-                          secondary={`Created: ${g.created_at} Last Updated: ${g.last_updated}`} // Size: ${g.size} | Reviewed: ${g.reviewed * 100}% |
-                        />
-                      </ListItemButton>
-                    </ListItem>
-                  ))}
+                <List sx={{ width: "100%" }} component="nav">
+                  {state.graphs
+                    .sort(
+                      (a, b) => new Date(b.updated_at) - new Date(a.updated_at)
+                    )
+                    .map((g, index) => (
+                      <ListItem
+                        key={index}
+                        disablePadding
+                        secondaryAction={
+                          <>
+                            {deleting === g._id ? (
+                              <Box
+                                display="flex"
+                                alignItems="center"
+                                justifyContent="center"
+                              >
+                                <CircularProgress size={16} />
+                              </Box>
+                            ) : (
+                              <IconButton
+                                edge="end"
+                                aria-label="graph-delete"
+                                title="Click to delete graph"
+                                onClick={() => handleDelete(g._id)}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            )}
+                          </>
+                        }
+                      >
+                        <ListItemButton component={Link} to={`/${g._id}`}>
+                          <ListItemIcon>
+                            <HubIcon />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={g.name}
+                            secondary={`Created: ${moment
+                              .utc(g.created_at)
+                              .fromNow()} Last Updated: ${moment
+                              .utc(g.updated_at)
+                              .fromNow()}`} // Size: ${g.size} | Reviewed: ${g.reviewed * 100}% |
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                    ))}
                 </List>
               </>
             )}
