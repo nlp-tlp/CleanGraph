@@ -1,0 +1,92 @@
+[
+  {
+    "head": "Amazon River",
+    "head_type": "River",
+    "head_properties": {
+      "length": "6,400 km",
+      "discharge": "209,000 cubic meters per second"
+    },
+    "relation": "flows through",
+    "relation_properties": {
+      "direction": "West to East"
+    },
+    "tail": "Brazil",
+    "tail_type": "Country",
+    "tail_properties": {
+      "population": "211 million",
+      "capital": "Brasilia"
+    }
+  },
+  {
+    "head": "Mount Everest",
+    "head_type": "Mountain",
+    "head_properties": {
+      "height": "8,848 meters",
+      "first_ascent": "1953"
+    },
+    "relation": "located in",
+    "relation_properties": {
+      "coordinates": "(27.9881° N, 86.9250° E)"
+    },
+    "tail": "Nepal",
+    "tail_type": "Country",
+    "tail_properties": {
+      "population": "29.3 million",
+      "capital": "Kathmandu"
+    }
+  },
+  {
+    "head": "New York",
+    "head_type": "City",
+    "head_properties": {
+      "population": "8.4 million",
+      "area": "468.484 square miles"
+    },
+    "relation": "located in",
+    "relation_properties": {
+      "coordinates": "(40.7128° N, 74.0060° W)"
+    },
+    "tail": "United States",
+    "tail_type": "Country",
+    "tail_properties": {
+      "population": "331 million",
+      "capital": "Washington, D.C."
+    }
+  },
+  {
+    "head": "Lake Victoria",
+    "head_type": "Lake",
+    "head_properties": {
+      "area": "68,800 square kilometers",
+      "max_depth": "84 meters"
+    },
+    "relation": "located in",
+    "relation_properties": {
+      "coordinates": "(1.3036° S, 33.0051° E)"
+    },
+    "tail": "Uganda",
+    "tail_type": "Country",
+    "tail_properties": {
+      "population": "45.7 million",
+      "capital": "Kampala"
+    }
+  },
+  {
+    "head": "Danube River",
+    "head_type": "River",
+    "head_properties": {
+      "length": "2,860 km",
+      "discharge": "6,600 cubic meters per second"
+    },
+    "relation": "flows through",
+    "relation_properties": {
+      "direction": "West to East"
+    },
+    "tail": "Germany",
+    "tail_type": "Country",
+    "tail_properties": {
+      "population": "83 million",
+      "capital": "Berlin"
+    }
+  }
+]

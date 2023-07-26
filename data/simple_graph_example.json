@@ -1,0 +1,102 @@
+[
+  {
+    "head": "Amazon River",
+    "relation": "flows through",
+    "tail": "Brazil"
+  },
+  {
+    "head": "Mount Everest",
+    "relation": "located in",
+    "tail": "Nepal"
+  },
+  {
+    "head": "Mount Everest",
+    "relation": "climbed by",
+    "tail": "Person 1"
+  },
+  {
+    "head": "Mount Everest",
+    "relation": "climbed by",
+    "tail": "Person 2"
+  },
+  {
+    "head": "Mount Everest",
+    "relation": "climbed by",
+    "tail": "Person 3"
+  },
+  {
+    "head": "Mount Everest",
+    "relation": "climbed by",
+    "tail": "Person 4"
+  },
+  {
+    "head": "Mount Everest",
+    "relation": "climbed by",
+    "tail": "Person 5"
+  },
+  {
+    "head": "Mount Everest",
+    "relation": "climbed by",
+    "tail": "Person 6"
+  },
+  {
+    "head": "Mount Everest",
+    "relation": "climbed by",
+    "tail": "Person 7"
+  },
+  {
+    "head": "Mount Everest",
+    "relation": "climbed by",
+    "tail": "Person 8"
+  },
+  {
+    "head": "Mount Everest",
+    "relation": "climbed by",
+    "tail": "Person 9"
+  },
+  {
+    "head": "Mount Everest",
+    "relation": "climbed by",
+    "tail": "Person 10"
+  },
+  {
+    "head": "New York",
+    "relation": "located in",
+    "tail": "United States"
+  },
+  {
+    "head": "Lake Victoria",
+    "relation": "located in",
+    "tail": "Uganda"
+  },
+  {
+    "head": "Danube River",
+    "relation": "flows through",
+    "tail": "Germany"
+  },
+  {
+    "head": "Sahara Desert",
+    "relation": "located in",
+    "tail": "Algeria"
+  },
+  {
+    "head": "Pacific Ocean",
+    "relation": "borders",
+    "tail": "Australia"
+  },
+  {
+    "head": "River Thames",
+    "relation": "flows through",
+    "tail": "England"
+  },
+  {
+    "head": "Andes Mountains",
+    "relation": "located in",
+    "tail": "Chile"
+  },
+  {
+    "head": "Mississippi River",
+    "relation": "flows through",
+    "tail": "United States"
+  }
+]

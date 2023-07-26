@@ -1,0 +1,226 @@
+[
+  {
+    "head": "Amazon River",
+    "head_type": "River",
+    "relation": "flows through",
+    "tail": "Brazil",
+    "tail_type": "Country"
+  },
+  {
+    "head": "Mount Everest",
+    "head_type": "Mountain",
+    "relation": "located in",
+    "tail": "Nepal",
+    "tail_type": "Country"
+  },
+  {
+    "head": "Sahara",
+    "head_type": "Desert",
+    "relation": "located in",
+    "tail": "Africa",
+    "tail_type": "Continent"
+  },
+  {
+    "head": "Pacific Ocean",
+    "head_type": "Ocean",
+    "relation": "borders",
+    "tail": "Australia",
+    "tail_type": "Country"
+  },
+  {
+    "head": "Great Barrier Reef",
+    "head_type": "Reef",
+    "relation": "located in",
+    "tail": "Pacific Ocean",
+    "tail_type": "Ocean"
+  },
+  {
+    "head": "New York City",
+    "head_type": "City",
+    "relation": "located in",
+    "tail": "United States",
+    "tail_type": "Country"
+  },
+  {
+    "head": "Nile River",
+    "head_type": "River",
+    "relation": "longest in",
+    "tail": "Africa",
+    "tail_type": "Continent"
+  },
+  {
+    "head": "Greenland",
+    "head_type": "Island",
+    "relation": "is part of",
+    "tail": "Denmark",
+    "tail_type": "Country"
+  },
+  {
+    "head": "Himalayas",
+    "head_type": "Mountain Range",
+    "relation": "has peak",
+    "tail": "Mount Everest",
+    "tail_type": "Mountain"
+  },
+  {
+    "head": "Antarctica",
+    "head_type": "Continent",
+    "relation": "located at",
+    "tail": "South Pole",
+    "tail_type": "Geographic Pole"
+  },
+  {
+    "head": "Mississippi River",
+    "head_type": "River",
+    "relation": "flows through",
+    "tail": "United States",
+    "tail_type": "Country"
+  },
+  {
+    "head": "Mount Kilimanjaro",
+    "head_type": "Mountain",
+    "relation": "located in",
+    "tail": "Tanzania",
+    "tail_type": "Country"
+  },
+  {
+    "head": "Gobi",
+    "head_type": "Desert",
+    "relation": "located in",
+    "tail": "Asia",
+    "tail_type": "Continent"
+  },
+  {
+    "head": "Atlantic Ocean",
+    "head_type": "Ocean",
+    "relation": "borders",
+    "tail": "United States",
+    "tail_type": "Country"
+  },
+  {
+    "head": "Great Barrier Reef",
+    "head_type": "Reef",
+    "relation": "part of",
+    "tail": "Australia",
+    "tail_type": "Country"
+  },
+  {
+    "head": "Los Angeles",
+    "head_type": "City",
+    "relation": "located in",
+    "tail": "United States",
+    "tail_type": "Country"
+  },
+  {
+    "head": "Amazon River",
+    "head_type": "River",
+    "relation": "second longest in",
+    "tail": "South America",
+    "tail_type": "Continent"
+  },
+  {
+    "head": "Iceland",
+    "head_type": "Island",
+    "relation": "is part of",
+    "tail": "Europe",
+    "tail_type": "Continent"
+  },
+  {
+    "head": "Andes",
+    "head_type": "Mountain Range",
+    "relation": "has peak",
+    "tail": "Aconcagua",
+    "tail_type": "Mountain"
+  },
+  {
+    "head": "Arctic",
+    "head_type": "Geographic Region",
+    "relation": "located at",
+    "tail": "North Pole",
+    "tail_type": "Geographic Pole"
+  },
+  {
+    "head": "Rio de Janeiro",
+    "head_type": "City",
+    "relation": "located in",
+    "tail": "Brazil",
+    "tail_type": "Country"
+  },
+  {
+    "head": "Lake Victoria",
+    "head_type": "Lake",
+    "relation": "located in",
+    "tail": "Africa",
+    "tail_type": "Continent"
+  },
+  {
+    "head": "Yellowstone National Park",
+    "head_type": "Park",
+    "relation": "located in",
+    "tail": "United States",
+    "tail_type": "Country"
+  },
+  {
+    "head": "Mediterranean Sea",
+    "head_type": "Sea",
+    "relation": "borders",
+    "tail": "Europe",
+    "tail_type": "Continent"
+  },
+  {
+    "head": "Grand Canyon",
+    "head_type": "Canyon",
+    "relation": "located in",
+    "tail": "United States",
+    "tail_type": "Country"
+  },
+  {
+    "head": "Denali",
+    "head_type": "Mountain",
+    "relation": "highest peak in",
+    "tail": "North America",
+    "tail_type": "Continent"
+  },
+  {
+    "head": "The Dead Sea",
+    "head_type": "Sea",
+    "relation": "borders",
+    "tail": "Israel",
+    "tail_type": "Country"
+  },
+  {
+    "head": "The Sahara",
+    "head_type": "Desert",
+    "relation": "largest in",
+    "tail": "Africa",
+    "tail_type": "Continent"
+  },
+  {
+    "head": "Hawaii",
+    "head_type": "Island",
+    "relation": "is part of",
+    "tail": "United States",
+    "tail_type": "Country"
+  },
+  {
+    "head": "The Alps",
+    "head_type": "Mountain Range",
+    "relation": "has peak",
+    "tail": "Mont Blanc",
+    "tail_type": "Mountain"
+  },
+  {
+    "head": "The Equator",
+    "head_type": "Geographic Line",
+    "relation": "crosses",
+    "tail": "Africa",
+    "tail_type": "Continent"
+  },
+  {
+    "head": "The Tropic of Cancer",
+    "head_type": "Geographic Line",
+    "relation": "crosses",
+    "tail": "Mexico",
+    "tail_type": "Country"
+  }
+]

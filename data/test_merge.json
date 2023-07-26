@@ -1,0 +1,30 @@
+[
+  {
+    "head": "replace",
+    "head_type": "Activity",
+    "relation": "hasParticipant",
+    "tail": "a/c",
+    "tail_type": "Item"
+  },
+  {
+    "head": "replace",
+    "head_type": "Activity",
+    "relation": "hasParticipant",
+    "tail": "aircon",
+    "tail_type": "Item"
+  },
+  {
+    "head": "replace",
+    "head_type": "Activity",
+    "relation": "hasParticipant",
+    "tail": "air conditioner",
+    "tail_type": "Item"
+  },
+  {
+    "head": "replace",
+    "head_type": "Activity",
+    "relation": "hasParticipant",
+    "tail": "a/con",
+    "tail_type": "Item"
+  }
+]
