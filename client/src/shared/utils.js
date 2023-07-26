@@ -1,3 +1,25 @@
+export const putIdOnTop = (array, id) => {
+  // Find the index of the object with the given id
+  const index = array.findIndex((item) => item._id === id);
+
+  if (index === -1) {
+    // If the object with the given id is not found, return the array as is
+    console.log("Item not found");
+    return array;
+  }
+
+  // Get the object
+  const obj = array[index];
+
+  // Remove the object from its current position
+  array.splice(index, 1);
+
+  // Add the object at the start of the array
+  array.unshift(obj);
+
+  return array;
+};
+
 export const getFontColor = (color) => {
   const hexToRgb = (hex) =>
     hex
@@ -112,6 +134,12 @@ export const sortSubgraphs = (
         sortDescending
           ? a.suggestions - b.suggestions
           : b.suggestions - a.suggestions
+      );
+    case "reviewed_progress":
+      return subgraphs.sort((a, b) =>
+        sortDescending
+          ? a.reviewed_progress - b.reviewed_progress
+          : b.reviewed_progress - a.reviewed_progress
       );
 
     default:
