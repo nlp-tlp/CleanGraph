@@ -2,7 +2,7 @@ import React from "react";
 import Overview from "./Overview";
 import Subgraphs from "./Subgraphs";
 import { Box, Drawer, Toolbar } from "@mui/material";
-import { DRAWER_WIDTH } from "../../shared/constants";
+import { DRAWER_WIDTH, ZIndexes } from "../../shared/constants";
 
 const PrimarySidebar = () => {
   return (
@@ -15,6 +15,7 @@ const PrimarySidebar = () => {
           width: DRAWER_WIDTH,
           boxSizing: "border-box",
         },
+        zIndex: ZIndexes.level1,
       }}
     >
       <Toolbar />
