@@ -1,24 +1,23 @@
 import { useReducer, createContext } from "react";
-import { sortSubgraphs } from "./utils";
+import { putIdOnTop } from "./utils";
 
 const initialState = {
   loading: true,
   graphs: [],
   graph: { name: "", createdAt: "" },
   data: { nodes: [], links: [], neighbours: [] },
+  settings: {
+    graph: { display_edge_labels: true, node_size: "medium", limit: 10 },
+  },
   subgraphs: [],
-  sortType: "alpha",
-  sortDescending: true,
   ontology: [],
-  ontologyName2Id: {},
-  centralNode: null, // This is the central node of the rendered subgraph
-  currentNode: null, // This is the central node for the rendered subgraph
-  currentItem: null, // This is the current item selected (node or edge)
+  ontologyId2Detail: { nodes: {}, edges: {} },
+  centralNodeId: null,
+  currentItemId: null,
+  currentItemIsNode: null,
   maxTriples: 0,
-  selectedNodeId: null,
-  leftClickNodeInfo: null,
   modal: {
-    open: false,
+    open: null,
     view: null,
   },
 };
@@ -27,7 +26,45 @@ export const GraphContext = createContext();
 
 const reducer = (state, action) => {
   switch (action.type) {
+    case "SET_GRAPHS":
+      return { ...initialState, graphs: action.payload };
     case "SET_GRAPH": {
+      // For setting the entire project graph details
+      return {
+        ...state,
+        graph: {
+          name: action.payload.name,
+          createdAt: action.payload.created_at,
+          updatedAt: action.payload.updated_at,
+        },
+        settings: { ...state.settings, ...action.payload.settings },
+        ontology: {
+          nodes: action.payload.node_classes,
+          edges: action.payload.edge_classes,
+        },
+        ontologyId2Detail: {
+          nodes: Object.assign(
+            {},
+            ...action.payload.node_classes.map((i) => ({
+              [i._id]: { name: i.name, color: i.color },
+            }))
+          ),
+          edges: Object.assign(
+            {},
+            ...action.payload.edge_classes.map((i) => ({
+              [i._id]: { name: i.name, color: i.color },
+            }))
+          ),
+        },
+        subgraphs: action.payload.subgraphs,
+        totalErrors: action.payload.total_errors,
+        totalSuggestions: action.payload.total_suggestions,
+        startNodeCount: action.payload.start_node_count,
+        startEdgeCount: action.payload.start_edge_count,
+      };
+    }
+    case "SET_SUBGRAPH":
+      // For setting subsequent subgraph selections including large graph paginations
       return {
         ...state,
         data: {
@@ -35,13 +72,22 @@ const reducer = (state, action) => {
           links: action.payload.links,
           neighbours: action.payload.neighbours,
         },
-        currentNode: action.payload.node,
-        centralNode: action.payload.node,
+        currentItemId: action.payload.central_node_id,
+        currentItemIsNode: true,
+        centralNodeId: action.payload.central_node_id,
         maxTriples: action.payload.max_triples,
+        // subgraphs: putIdOnTop(state.subgraphs, action.payload.central_node_id),
+        loading: false,
       };
-    }
     case "SET_LOADING": {
       return { ...state, loading: action.payload };
+    }
+    case "SET_CURRENT_ITEM": {
+      return {
+        ...state,
+        currentItemId: action.payload.id,
+        currentItemIsNode: action.payload.isNode,
+      };
     }
     case "SET_VALUE": {
       return { ...state, [action.payload.key]: action.payload.value };
@@ -49,60 +95,293 @@ const reducer = (state, action) => {
     case "DELETE_GRAPH": {
       return {
         ...state,
-        graphs: state.graphs.filter((g) => g.id !== action.payload.graphId),
+        graphs: state.graphs.filter((g) => g._id !== action.payload.graphId),
       };
     }
-    case "SORT_SUBGRAPHS":
+    case "UPDATE_ITEM": {
+      // Updates item data/properties/topology.
+      let { itemId, isNode, ...newItemValues } = action.payload;
+      const itemType = isNode ? "nodes" : "links";
+
+      if (newItemValues.reverse_direction) {
+        // Edge direction reverse
+        newItemValues = {
+          ...newItemValues,
+          source: state.data.links[itemId].target,
+          target: state.data.links[itemId].source,
+        };
+      }
+
       return {
         ...state,
-        subgraphs: sortSubgraphs(
-          state.subgraphs,
-          action.payload.sortType,
-          action.payload.sortDescending
-        ),
-        sortType: action.payload.sortType,
-        sortDescending: action.payload.sortDescending,
+        data: {
+          ...state.data,
+          [itemType]: {
+            ...state.data[itemType],
+            [itemId]: {
+              ...state.data[itemType][itemId],
+              ...newItemValues,
+            },
+          },
+        },
       };
-    case "UPDATE_NODE":
-      // Update properties of node and it's associated links.
-      let { id: nodeId, ...newNodeValues } = action.payload;
+    }
+    case "UPDATE_SETTINGS":
+      return {
+        ...state,
+        settings: { ...state.settings, ...action.payload },
+        graph: { ...state.graph, updatedAt: new Date().toISOString() },
+      };
 
-      // Get original node
-      const originalNode = state.data.nodes.find((n) => n.id === nodeId);
+    case "DELETE_PROPERTY": {
+      const { itemId, isNode, propertyId } = action.payload;
+      const itemType = isNode ? "nodes" : "links";
 
-      // If node type changed, update color based on ontology
-      if (newNodeValues.type !== originalNode.type) {
-        const matchingOntologyItem = state.ontology.find(
-          (i) => i.id === newNodeValues.type
-        );
-        if (matchingOntologyItem) {
-          newNodeValues.color = matchingOntologyItem.color;
+      // Copy only the necessary parts of the state
+      const itemData = state.data[itemType][itemId];
+      const updatedProperties = itemData.properties.filter(
+        (p) => p.id !== propertyId
+      );
+
+      return {
+        ...state,
+        data: {
+          ...state.data,
+          [itemType]: {
+            ...state.data[itemType],
+            [itemId]: {
+              ...itemData,
+              properties: updatedProperties,
+            },
+          },
+        },
+      };
+    }
+
+    case "UPDATE_ACKNOWLEDGEMENT": {
+      const { itemId, isNode, isError, errorOrSuggestionItemId } =
+        action.payload;
+      const itemType = isNode ? "nodes" : "links";
+      const arrayName = isError ? "errors" : "suggestions";
+
+      // Make a copy of the current state to avoid mutating it directly
+      const newState = JSON.parse(JSON.stringify(state));
+
+      // Find the item to update and change its acknowledged property
+      const itemToUpdate = newState.data[itemType][itemId][arrayName].find(
+        (item) => item.id === errorOrSuggestionItemId
+      );
+      if (itemToUpdate) {
+        itemToUpdate.acknowledged = true;
+        itemToUpdate.updated_at = new Date().toISOString();
+      }
+
+      return newState;
+    }
+
+    case "REVIEW_ITEM":
+      const { isNode, itemId, reviewAll, neighbours } = action.payload;
+      const itemType = isNode ? "nodes" : "links";
+
+      // Make a copy of the current state to avoid mutating it directly
+      const newState = JSON.parse(JSON.stringify(state));
+      const updatedAt = new Date().toISOString();
+
+      if (reviewAll) {
+        const neighbourNodeIds = new Set([itemId, ...neighbours.nodes]);
+        const neighbourEdgeIds = new Set([itemId, ...neighbours.links]);
+
+        if (neighbourNodeIds.size > 0) {
+          Object.entries(newState.data.nodes).forEach(([id, node]) => {
+            if (neighbourNodeIds.has(id)) {
+              node.is_reviewed = true;
+              node.updated_at = updatedAt;
+            }
+          });
+        }
+
+        if (neighbourEdgeIds.size > 0) {
+          Object.entries(newState.data.links).forEach(([id, edge]) => {
+            if (neighbourEdgeIds.has(id)) {
+              edge.is_reviewed = true;
+              edge.updated_at = updatedAt;
+            }
+          });
+        }
+      } else {
+        // Find the item to update and change its "is_reviewed" property
+        const itemToUpdate = newState.data[itemType][itemId];
+        if (itemToUpdate) {
+          itemToUpdate.is_reviewed = !itemToUpdate.is_reviewed;
+          itemToUpdate.updated_at = updatedAt;
         }
       }
 
-      const updatedNode = {
-        ...originalNode,
-        ...newNodeValues,
-        type: newNodeValues.typeName,
-      };
+      return newState;
 
-      // Update nodes with updated node
-      const updatedNodes = state.data.nodes.map((n) =>
-        n.id === nodeId ? updatedNode : n
-      );
+    case "TOGGLE_ITEM_ACTIVATION": {
+      let { itemId, isActive, updatedNodeIds, updatedEdgeIds } = action.payload;
 
-      // Update links
-      const updatedLinks = state.data.links.map((l) => ({
-        ...l,
-        source: l.source.id,
-        target: l.target.id,
-      }));
+      updatedNodeIds = new Set([...updatedNodeIds, itemId]);
+      updatedEdgeIds = new Set([...updatedEdgeIds, itemId]);
+      const updatedAt = new Date().toISOString();
+
+      // Make a copy of the current state to avoid mutating it directly
+      const newState = JSON.parse(JSON.stringify(state));
+
+      if (updatedNodeIds.size > 0) {
+        Object.entries(newState.data.nodes).forEach(([id, node]) => {
+          if (updatedNodeIds.has(id)) {
+            node.is_active = isActive;
+            node.updated_at = updatedAt;
+          }
+        });
+      }
+
+      if (updatedEdgeIds.size > 0) {
+        Object.entries(newState.data.links).forEach(([id, edge]) => {
+          if (updatedEdgeIds.has(id)) {
+            console.log("updating edge activation...");
+            edge.is_active = isActive;
+            edge.updated_at = updatedAt;
+          }
+        });
+      }
+
+      return newState;
+    }
+
+    case "ADD_CLASS_ITEM": {
+      const { newClass, isNode } = action.payload;
+      const ontologyType = isNode ? "nodes" : "edges";
 
       return {
         ...state,
-        data: { ...state.data, nodes: updatedNodes, links: updatedLinks },
-        currentNode: updatedNode,
+        ontology: {
+          ...state.ontology,
+          [ontologyType]: [...state.ontology[ontologyType], newClass],
+        },
+        ontologyName2Color: {
+          ...state.ontologyName2Color,
+          [ontologyType]: {
+            ...state.ontologyName2Color[ontologyType],
+            [newClass.name]: newClass.color,
+          },
+        },
       };
+    }
+
+    case "UPDATE_CLASS_ITEM": {
+      const { updatedClass, isNode } = action.payload;
+      const ontologyType = isNode ? "nodes" : "links";
+
+      // Make a copy of the current state to avoid mutating it directly
+      const newState = JSON.parse(JSON.stringify(state));
+
+      // Find the item to update and change its acknowledged property
+      const classToUpdate = newState.ontology[ontologyType].find(
+        (item) => item._id === updatedClass.id
+      );
+
+      if (classToUpdate) {
+        classToUpdate.name = updatedClass.name;
+        classToUpdate.color = updatedClass.color;
+      }
+
+      return newState;
+    }
+
+    case "MERGE_NODES": {
+      // Avoid direct state mutation
+      let newState = { ...state };
+
+      // Destructure the payload for clearer reference
+      const { old_node_ids, new_subgraph } = action.payload;
+
+      // Filter out the old subgraphs and add the new one in a single operation
+      newState.subgraphs = [
+        ...newState.subgraphs.filter((sg) => !old_node_ids.includes(sg._id)),
+        new_subgraph,
+      ];
+
+      return newState;
+
+      // ---------------------------- old logic
+
+      // Merges two nodes
+      // const { newNode, oldNodeIds } = action.payload;
+
+      // console.log("newNode, oldNodeIds", newNode, oldNodeIds);
+
+      // // Make a copy of the current state to avoid mutating it directly
+      // let newState = _.cloneDeep(state);
+
+      // console.log("newState 1", newState);
+
+      // // 1.A Remove old nodes
+      // newState.data.nodes = Object.fromEntries(
+      //   Object.entries(newState.data.nodes).filter(
+      //     ([key, value]) => !oldNodeIds.includes(key)
+      //   )
+      // );
+      // // 1.B Update old links
+      // Object.values(newState.data.links).forEach((item) => {
+      //   if (oldNodeIds.includes(item.source)) {
+      //     item.source = newNode._id;
+      //   }
+
+      //   if (oldNodeIds.includes(item.target)) {
+      //     item.target = newNode._id;
+      //   }
+      // });
+
+      // // 1.C Remove old neighbours
+      // // Create a new node or use existing one
+      // newState.data.neighbours[newNode._id] = newState.data.neighbours[
+      //   newNode._id
+      // ] || {
+      //   nodes: [],
+      //   links: [],
+      // };
+
+      // // Replace ids within 'nodes' arrays and merge nodes and links
+      // Object.entries(newState.data.neighbours).forEach(([key, neighbour]) => {
+      //   neighbour.nodes = neighbour.nodes.map((node) =>
+      //     oldNodeIds.includes(node) ? newNode._id : node
+      //   );
+
+      //   if (oldNodeIds.includes(key)) {
+      //     newState.data.neighbours[newNode._id].nodes.push(...neighbour.nodes);
+      //     newState.data.neighbours[newNode._id].links.push(...neighbour.links);
+      //   }
+      // });
+
+      // // Filter out duplicates in the new node
+      // newState.data.neighbours[newNode._id].nodes = [
+      //   ...new Set(newState.data.neighbours[newNode._id].nodes),
+      // ];
+      // newState.data.neighbours[newNode._id].links = [
+      //   ...new Set(newState.data.neighbours[newNode._id].links),
+      // ];
+
+      // // Remove old ids from top-level
+      // oldNodeIds.forEach((id) => delete newState.data.neighbours[id]);
+
+      // // 2.A Add new node
+      // newState.data.nodes[newNode._id] = newNode;
+
+      // // Update currentItemId/centralNodeId
+      // newState.currentItemId = oldNodeIds.includes(newState.currentItemId)
+      //   ? newNode._id
+      //   : newState.currentItemId;
+      // newState.centralNodeId = oldNodeIds.includes(newState.centralNodeId)
+      //   ? newNode._id
+      //   : newState.centralNodeId;
+
+      // console.log("newState 2", newState);
+
+      return newState;
+    }
 
     case "TOGGLE_MODAL":
       if (!action.payload || action.payload.view === undefined) {
