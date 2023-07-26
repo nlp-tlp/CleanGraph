@@ -1,9 +1,11 @@
 import React, { useContext } from "react";
-import { Box, Modal, Paper } from "@mui/material";
+import { Dialog, DialogContent } from "@mui/material";
 import { GraphContext } from "../shared/context";
 import Legend from "./ModalViews/Legend";
 import Settings from "./ModalViews/Settings";
 import Help from "./ModalViews/Help";
+import { ZIndexes } from "../shared/constants";
+import ErrorsOrSuggestions from "./ModalViews/ErrorsOrSuggestions";
 
 const DialogModal = () => {
   const [state, dispatch] = useContext(GraphContext);
@@ -20,35 +22,37 @@ const DialogModal = () => {
         return <Settings handleClose={handleClose} />;
       case "help":
         return <Help handleClose={handleClose} />;
+      case "errors":
+        return (
+          <ErrorsOrSuggestions context={"errors"} handleClose={handleClose} />
+        );
+      case "suggestions":
+        return (
+          <ErrorsOrSuggestions
+            context={"suggestions"}
+            handleClose={handleClose}
+          />
+        );
       default:
         return null;
     }
   };
 
-  const modalStyle = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: 600,
-    maxHeight: 600,
-    // overflowY: "auto",
-    bgcolor: "background.paper",
-    border: "2px solid",
-    borderColor: "lightgrey",
-    boxShadow: 24,
-    p: 0,
-    display: "flex",
-    flexDirection: "column",
-    borderRadius: 4,
-  };
-
   return (
-    <Modal open={state.modal.open} onClose={handleClose}>
-      <Box sx={modalStyle} as={Paper} variant="outlined">
+    <Dialog
+      open={state.modal.open}
+      onClose={handleClose}
+      PaperProps={{
+        sx: {
+          borderRadius: 4,
+          zIndex: ZIndexes.level3,
+        },
+      }}
+    >
+      <DialogContent sx={{ p: 0, m: 0, maxWidth: 1200, maxHeight: 1000 }}>
         {renderView()}
-      </Box>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 };
 
