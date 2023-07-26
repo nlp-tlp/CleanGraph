@@ -19,7 +19,7 @@ import { saveAs } from "file-saver";
 
 const HelperTray = () => {
   const { graphId } = useParams();
-  const [dispatch] = useContext(GraphContext);
+  const [state, dispatch] = useContext(GraphContext);
   const [downloading, setDownloading] = useState(false);
   const handleIconClick = (viewOption) => {
     dispatch({ type: "TOGGLE_MODAL", payload: { view: viewOption } });
@@ -96,7 +96,7 @@ const HelperTray = () => {
         )}
       </Tooltip>
       {/* <Tooltip title="Click to return to home"> */}
-      <IconButton size="large" color="primary" component={Link} to="/">
+      <IconButton size="large" color="primary" component={Link} to="/home">
         <HomeIcon fontSize="small" sx={{ color: ICON_COLOR }} />
       </IconButton>
       {/* </Tooltip> */}
