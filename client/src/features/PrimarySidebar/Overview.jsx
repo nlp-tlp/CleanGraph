@@ -6,22 +6,66 @@ import {
   AlertTitle,
   useTheme,
   Button,
+  alpha,
+  darken,
 } from "@mui/material";
 import { GraphContext } from "../../shared/context";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import TipsAndUpdatesIcon from "@mui/icons-material/TipsAndUpdates";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
 const Overview = () => {
   const [state] = useContext(GraphContext);
   const theme = useTheme();
 
-  const startSize = state.data?.links.length || 0;
-  const currentSize = state.data?.links.filter((l) => l.active).length || 0;
+  // TODO: update this - current size needs to take into account the entire graph not just
+  // the current subgraph...
+  const startSize = state.startEdgeCount || 0;
+  const currentSize =
+    Object.values(state.data?.links).filter((l) => l.is_active).length || 0;
   const diffSize = startSize - currentSize;
-  const reviewedSize = state.reviewed?.links.length || 0;
-  const errorSize = state.errors?.length || 10;
+  const errorSize = state?.totalErrors || 0;
+  const suggestionSize = state?.totalSuggestions || 0;
+
+  const reviewedNodesSize = Object.values(state.data.nodes).filter(
+    (n) => n.is_reviewed
+  ).length;
+  const reviewedEdgesSize = Object.values(state.data.links).filter(
+    (l) => l.is_reviewed
+  ).length;
+  const reviewedSize = reviewedNodesSize + reviewedEdgesSize;
+
+  const alerts = [
+    {
+      name: "review",
+      title: "Reviewed",
+      color: state.settings.colors.reviewed,
+      icon: <CheckBoxIcon />,
+      count: `N: ${reviewedNodesSize}/${state.startNodeCount} E: ${reviewedEdgesSize}/${state.startEdgeCount}`,
+      showButton: reviewedSize > 0,
+    },
+    {
+      name: "errors",
+      title: "Errors Detected",
+      color: state.settings.colors.error,
+      icon: <WarningAmberIcon />,
+      count: errorSize,
+      showButton: errorSize > 0,
+      hide: !state.settings.display_errors,
+    },
+    {
+      name: "suggestions",
+      title: "Suggestions",
+      color: state.settings.colors.suggestion,
+      icon: <TipsAndUpdatesIcon />,
+      count: suggestionSize,
+      showButton: suggestionSize > 0,
+      hide: !state.settings.display_suggestions,
+    },
+  ];
 
   return (
     <Stack p={2} spacing={2}>
@@ -43,38 +87,49 @@ const Overview = () => {
           </Stack>
         </Stack>
       </Alert>
-      <Alert
-        sx={{
-          backgroundColor:
-            reviewedSize > 0 ? "success" : theme.palette.primary.light,
-          color: reviewedSize > 0 ? "success" : theme.palette.primary.dark,
-        }}
-        icon={
-          <CheckBoxIcon
-            sx={{
-              color:
-                reviewedSize > 0 ? "success" : theme.palette.primary.darker,
-            }}
-          />
-        }
-      >
-        <AlertTitle>Reviewed</AlertTitle>
-        <Typography variant="h6">{reviewedSize}</Typography>
-      </Alert>
-      <Alert
-        severity={errorSize > 0 ? "warning" : "success"}
-        action={
-          errorSize > 0 && (
-            <Button color="inherit" size="small">
-              Show
-            </Button>
-          )
-        }
-      >
-        <AlertTitle>Errors Detected</AlertTitle>
-        <Typography variant="h6">{errorSize}</Typography>
-      </Alert>
+      {alerts
+        .filter((alert) => !alert.hide)
+        .map((alert, index) => (
+          <ColoredAlert key={index} {...alert} />
+        ))}
     </Stack>
+  );
+};
+
+const ColoredAlert = ({
+  name,
+  color,
+  icon,
+  title,
+  count,
+  showButton = true,
+}) => {
+  const [state, dispatch] = useContext(GraphContext);
+
+  const handleShow = (viewOption) => {
+    dispatch({ type: "TOGGLE_MODAL", payload: { view: viewOption } });
+  };
+
+  return (
+    <Alert
+      icon={React.cloneElement(icon, {
+        sx: { color: darken(color, 0.5) },
+      })}
+      sx={{
+        backgroundColor: alpha(color, 0.25),
+        color: darken(color, 0.5),
+      }}
+      action={
+        showButton && (
+          <Button color="inherit" size="small" onClick={() => handleShow(name)}>
+            Show
+          </Button>
+        )
+      }
+    >
+      <AlertTitle>{title}</AlertTitle>
+      <Typography variant="h6">{count}</Typography>
+    </Alert>
   );
 };
 
