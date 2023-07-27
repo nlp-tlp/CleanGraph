@@ -1,9 +1,10 @@
 import React, { useContext, useState } from "react";
-import { Box, CircularProgress, IconButton, Tooltip } from "@mui/material";
+import { Tooltip } from "@mui/material";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { reviewItem } from "../../shared/api";
 import { GraphContext } from "../../shared/context";
 import { SnackbarContext } from "../../shared/snackbarContext";
+import LoadingButton from "@mui/lab/LoadingButton";
 
 const ReviewButton = () => {
   const [state, dispatch] = useContext(GraphContext);
@@ -55,28 +56,28 @@ const ReviewButton = () => {
     }
   };
 
-  if (submitting) {
-    return (
-      <Box display="flex" alignItems="center" justifyContent="center" p="12px">
-        <CircularProgress size={22} />
-      </Box>
-    );
-  } else {
-    return (
-      <IconButton
-        onClick={handleReview}
+  return (
+    <Tooltip
+      title={`Click to set the current subgraph view (${unreviewedNodes} nodes & ${unreviewedEdges} edges) as reviewed`}
+    >
+      <LoadingButton
+        variant="outlined"
+        startIcon={<ThumbUpAltIcon />}
+        sx={{
+          backgroundColor: "white",
+          "&:hover": {
+            backgroundColor: "white",
+          },
+        }}
         color="success"
-        size="large"
+        onClick={handleReview}
         disabled={reviewed}
+        loading={submitting}
       >
-        <Tooltip
-          title={`Click to set the current subgraph view (${unreviewedNodes} nodes & ${unreviewedEdges} edges) as reviewed`}
-        >
-          <ThumbUpAltIcon />
-        </Tooltip>
-      </IconButton>
-    );
-  }
+        Review
+      </LoadingButton>
+    </Tooltip>
+  );
 };
 
 export default ReviewButton;
