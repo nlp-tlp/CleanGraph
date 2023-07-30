@@ -24,6 +24,22 @@ const initialState = {
 
 export const GraphContext = createContext();
 
+const updateEdgeDirection = (state, itemId, newItemValues) => {
+  return {
+    ...newItemValues,
+    source: state.data.links[itemId].target,
+    target: state.data.links[itemId].source,
+  };
+};
+
+const updateSubgraphs = (state, itemId, newItemValues) => {
+  return state.subgraphs.map((sg) =>
+    sg._id === itemId
+      ? { ...sg, name: newItemValues.name, type: newItemValues.type }
+      : sg
+  );
+};
+
 const reducer = (state, action) => {
   switch (action.type) {
     case "SET_GRAPHS":
@@ -100,20 +116,22 @@ const reducer = (state, action) => {
     }
     case "UPDATE_ITEM": {
       // Updates item data/properties/topology.
+      // Updates subgraphs too.
       let { itemId, isNode, ...newItemValues } = action.payload;
       const itemType = isNode ? "nodes" : "links";
 
+      // Edge direction reverse
       if (newItemValues.reverse_direction) {
-        // Edge direction reverse
-        newItemValues = {
-          ...newItemValues,
-          source: state.data.links[itemId].target,
-          target: state.data.links[itemId].source,
-        };
+        newItemValues = updateEdgeDirection(state, itemId, newItemValues);
       }
+
+      const newSubgraphs = isNode
+        ? updateSubgraphs(state, itemId, newItemValues)
+        : state.subgraphs;
 
       return {
         ...state,
+        subgraphs: newSubgraphs,
         data: {
           ...state.data,
           [itemType]: {
@@ -305,84 +323,7 @@ const reducer = (state, action) => {
       ];
 
       return newState;
-
-      // ---------------------------- old logic
-
-      // Merges two nodes
-      // const { newNode, oldNodeIds } = action.payload;
-
-      // console.log("newNode, oldNodeIds", newNode, oldNodeIds);
-
-      // // Make a copy of the current state to avoid mutating it directly
-      // let newState = _.cloneDeep(state);
-
-      // console.log("newState 1", newState);
-
-      // // 1.A Remove old nodes
-      // newState.data.nodes = Object.fromEntries(
-      //   Object.entries(newState.data.nodes).filter(
-      //     ([key, value]) => !oldNodeIds.includes(key)
-      //   )
-      // );
-      // // 1.B Update old links
-      // Object.values(newState.data.links).forEach((item) => {
-      //   if (oldNodeIds.includes(item.source)) {
-      //     item.source = newNode._id;
-      //   }
-
-      //   if (oldNodeIds.includes(item.target)) {
-      //     item.target = newNode._id;
-      //   }
-      // });
-
-      // // 1.C Remove old neighbours
-      // // Create a new node or use existing one
-      // newState.data.neighbours[newNode._id] = newState.data.neighbours[
-      //   newNode._id
-      // ] || {
-      //   nodes: [],
-      //   links: [],
-      // };
-
-      // // Replace ids within 'nodes' arrays and merge nodes and links
-      // Object.entries(newState.data.neighbours).forEach(([key, neighbour]) => {
-      //   neighbour.nodes = neighbour.nodes.map((node) =>
-      //     oldNodeIds.includes(node) ? newNode._id : node
-      //   );
-
-      //   if (oldNodeIds.includes(key)) {
-      //     newState.data.neighbours[newNode._id].nodes.push(...neighbour.nodes);
-      //     newState.data.neighbours[newNode._id].links.push(...neighbour.links);
-      //   }
-      // });
-
-      // // Filter out duplicates in the new node
-      // newState.data.neighbours[newNode._id].nodes = [
-      //   ...new Set(newState.data.neighbours[newNode._id].nodes),
-      // ];
-      // newState.data.neighbours[newNode._id].links = [
-      //   ...new Set(newState.data.neighbours[newNode._id].links),
-      // ];
-
-      // // Remove old ids from top-level
-      // oldNodeIds.forEach((id) => delete newState.data.neighbours[id]);
-
-      // // 2.A Add new node
-      // newState.data.nodes[newNode._id] = newNode;
-
-      // // Update currentItemId/centralNodeId
-      // newState.currentItemId = oldNodeIds.includes(newState.currentItemId)
-      //   ? newNode._id
-      //   : newState.currentItemId;
-      // newState.centralNodeId = oldNodeIds.includes(newState.centralNodeId)
-      //   ? newNode._id
-      //   : newState.centralNodeId;
-
-      // console.log("newState 2", newState);
-
-      return newState;
     }
-
     case "TOGGLE_MODAL":
       if (!action.payload || action.payload.view === undefined) {
         // if no view is supplied, close the modal
@@ -404,7 +345,6 @@ const reducer = (state, action) => {
           },
         };
       } else {
-        // open the new view
         return {
           ...state,
           modal: {
