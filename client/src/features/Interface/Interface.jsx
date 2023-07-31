@@ -2,13 +2,12 @@ import { useContext, useEffect, useState } from "react";
 import {
   CssBaseline,
   Box,
-  Paper,
   Typography,
   CircularProgress,
   AppBar,
   Toolbar,
   Stack,
-  alpha,
+  Skeleton,
 } from "@mui/material";
 import Graph from "../Graph";
 import { GraphContext } from "../../shared/context";
@@ -17,12 +16,11 @@ import PrimarySidebar from "../PrimarySidebar/PrimarySidebar";
 import Pagination from "./Pagination";
 import HelperTray from "../HelperTray";
 import ReviewButton from "./ReviewButton";
-import Properties from "../Properties";
-import { grey } from "@mui/material/colors";
+import SecondarySidebar from "../SecondarySidebar";
 import DialogModal from "../DialogModal";
 import { getSampleSubgraph, getGraphData } from "../../shared/api";
 import { SnackbarContext } from "../../shared/snackbarContext";
-import { ZIndexes } from "../../shared/constants";
+import { DRAWER_WIDTH, ZIndexes } from "../../shared/constants";
 
 const Interface = () => {
   const { graphId } = useParams();
@@ -36,7 +34,7 @@ const Interface = () => {
   const limit = searchParams.get("limit") ?? state.settings.graph.limit;
   const [page, setPage] = useState(searchParams.get("page") ?? 0);
 
-  console.log("centralNodeId", centralNodeId, "limit", limit, "page", page);
+  // console.log("centralNodeId", centralNodeId, "limit", limit, "page", page);
 
   useEffect(() => {
     const fetchGraphData = async () => {
@@ -84,104 +82,92 @@ const Interface = () => {
           component="main"
           sx={{ flexGrow: 1, bgcolor: "background.default" }}
         >
-          {state.loading ? (
-            <Box
+          <Box display="flex">
+            <CssBaseline />
+            <AppBar
+              position="fixed"
               sx={{
-                width: "100vw",
-                height: "100vh",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                zIndex: ZIndexes.level2,
+                borderBottom: "1px solid lightgrey",
+                bgcolor: "white",
+                color: "black",
               }}
+              elevation={0}
             >
-              <Box
-                component={Paper}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  flexDirection: "column",
-                  maxWidth: 300,
-                  textAlign: "center",
-                }}
-                p={4}
-              >
-                <CircularProgress />
-                <Typography variant="h6" gutterBottom>
-                  Loading Graph
-                </Typography>
-              </Box>
-            </Box>
-          ) : (
-            <Box display="flex">
-              <CssBaseline />
-              <AppBar
-                position="fixed"
-                sx={{
-                  zIndex: ZIndexes.level2,
-                  borderBottom: "1px solid lightgrey",
-                  bgcolor: "white",
-                  color: "black",
-                }}
-                elevation={0}
-              >
-                <Toolbar>
-                  <Box
-                    display="flex"
-                    flexGrow={1}
-                    flexDirection="row"
-                    justifyContent="space-between"
+              <Toolbar>
+                <Box
+                  display="flex"
+                  flexGrow={1}
+                  flexDirection="row"
+                  justifyContent="space-between"
+                >
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="left"
+                    spacing={1}
                   >
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      justifyContent="left"
-                      spacing={1}
-                    >
-                      <Typography fontWeight={700}>CleanGraph</Typography>
-                      <Typography>{state.graph.name}</Typography>
-                    </Stack>
-                    <Stack
-                      direction="row"
-                      justifyContent="right"
-                      alignItems="center"
-                      spacing={2}
-                    >
-                      <Pagination page={page} setPage={setPage} />
-                      <HelperTray />
-                    </Stack>
-                  </Box>
-                </Toolbar>
-              </AppBar>
-              <Box component="main" display="flex" sx={{ flexGrow: 1 }}>
-                <PrimarySidebar />
-                <Graph />
-              </Box>
-              {state.currentItemId && (
+                    {state.loading ? (
+                      <Skeleton variant="rectangular" width={200} />
+                    ) : (
+                      <>
+                        <Typography fontWeight={700}>CleanGraph</Typography>
+                        <Typography>{state.graph.name}</Typography>
+                      </>
+                    )}
+                  </Stack>
+                  <Stack
+                    direction="row"
+                    justifyContent="right"
+                    alignItems="center"
+                    spacing={2}
+                  >
+                    {state.loading ? (
+                      <Skeleton variant="rectangular" width={300} />
+                    ) : (
+                      <>
+                        <Pagination page={page} setPage={setPage} />
+                        <HelperTray />
+                      </>
+                    )}
+                  </Stack>
+                </Box>
+              </Toolbar>
+            </AppBar>
+            <Box component="main" display="flex" sx={{ flexGrow: 1 }}>
+              {state.loading ? (
                 <Box
                   sx={{
-                    position: "absolute",
-                    right: "1rem",
-                    top: "calc(50% - 250px)",
-                    maxWidth: 360,
-                    maxHeight: 700,
-                    borderColor: grey[300],
-                    bgcolor: alpha(grey[100], 0.5),
-                    borderWidth: "1px",
-                    borderStyle: "solid",
-                    borderRadius: 4,
-                    ":hover": {
-                      bgcolor: grey[100],
-                    },
+                    width: "100vw",
+                    height: "100vh",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  <Properties />
+                  <Stack direction="row" alignItems="center" spacing={4}>
+                    <CircularProgress />
+                    <Typography variant="h6">Loading Graph</Typography>
+                  </Stack>
                 </Box>
+              ) : (
+                <>
+                  <PrimarySidebar />
+                  <Graph />
+                  {state.currentItemId && <SecondarySidebar />}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      left: DRAWER_WIDTH + 20,
+                      top: 80,
+                    }}
+                  >
+                    <ReviewButton />
+                  </Box>
+                </>
               )}
-              <Box sx={{ position: "absolute", right: "1.5rem", top: "80px" }}>
-                <ReviewButton />
-              </Box>
             </Box>
-          )}
+          </Box>
         </Box>
       </Box>
     </>
