@@ -1,16 +1,13 @@
+import React, { useContext } from "react";
 import {
   Box,
   Chip,
   CircularProgress,
-  ListItem,
-  ListItemButton,
-  ListItemText,
   Stack,
   Tooltip,
   Typography,
 } from "@mui/material";
-import { green, grey, red } from "@mui/material/colors";
-import React, { useContext } from "react";
+import { green, red } from "@mui/material/colors";
 import { styled } from "@mui/material/styles";
 import chroma from "chroma-js";
 import { GraphContext } from "../../shared/context";
@@ -24,6 +21,7 @@ const SubgraphListItem = ({
   loadingSubgraph = false,
 }) => {
   const [state] = useContext(GraphContext);
+  const itemActive = item._id === centralNodeId;
   const displaySecondaryText =
     settings.display_errors || settings.display_suggestions;
   const secondaryText =
@@ -34,47 +32,86 @@ const SubgraphListItem = ({
       : `suggestions: ${item.suggestions}`;
 
   return (
-    <ListItem
+    <Box
       style={style}
-      key={item._id}
-      disablePadding
+      display="flex"
+      alignItems="center"
+      justifyContent="flex-start"
       sx={{
-        background: item._id === centralNodeId && grey[300],
-        color: item._id === centralNodeId && "black",
+        border: itemActive && "1px solid rgba(0,0,0,0.125)",
+        borderRadius: 2,
+        "&:hover": {
+          backgroundColor: "rgba(0,0,0,0.03)",
+          cursor: "pointer",
+        },
       }}
+      p={1}
+      width="100%"
+      height={70}
+      onClick={() => handleSubGraphFilter(item._id)}
+      mb={1}
     >
-      {loadingSubgraph ? (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          width="100%"
-        >
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        sx={{
+          border: "1px solid rgba(0,0,0,0.125)",
+          borderRadius: 1,
+          width: 40,
+          height: 40,
+          backgroundColor: itemActive && "rgba(0,0,0,0.8)",
+          color: itemActive && "white",
+        }}
+      >
+        {item.value}
+      </Box>
+      <Box
+        ml={1}
+        p={1}
+        key={`subgraph-${item._id}`}
+        display="flex"
+        justifyContent="space-between"
+        alignItems="flex-start"
+        width="100%"
+      >
+        {loadingSubgraph ? (
           <Stack direction="row" alignItems="center" spacing={2}>
             <Typography fontSize={14}>Loading subgraph</Typography>
             <CircularProgress size={22} />
           </Stack>
-        </Box>
-      ) : (
-        <ListItemButton onClick={() => handleSubGraphFilter(item._id)}>
-          <ListItemText
-            id={`subgraph-${item._id}`}
-            title={`Click to toggle the (${item.name})[${
-              state.ontologyId2Detail.nodes[item.type].name
-            }] subgraph of size ${item.value}`}
-            primary={`${item.name} (${item.value})`}
-            secondary={
-              displaySecondaryText && (
-                <Typography variant="caption">{secondaryText}</Typography>
-              )
-            }
-          />
-          <Box>
+        ) : (
+          <Stack
+            direction="row"
+            alignItems="flex-start"
+            justifyContent="space-between"
+            width="100%"
+          >
+            <Tooltip
+              title={`Click to toggle the (${item.name}) [${
+                state.ontologyId2Detail.nodes[item.type].name
+              }] subgraph of size ${item.value}`}
+            >
+              <Box>
+                <Typography
+                  fontSize={14}
+                  fontWeight={600}
+                  color="rgba(0,0,0,0.8)"
+                >
+                  {item.name}
+                </Typography>
+                {displaySecondaryText && (
+                  <Typography fontSize={12} color="rgba(0,0,0,0.5)">
+                    {secondaryText}
+                  </Typography>
+                )}
+              </Box>
+            </Tooltip>
             <GradientChip progress={item.reviewed_progress} />
-          </Box>
-        </ListItemButton>
-      )}
-    </ListItem>
+          </Stack>
+        )}
+      </Box>
+    </Box>
   );
 };
 
