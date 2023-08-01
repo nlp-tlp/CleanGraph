@@ -16,6 +16,13 @@ import { reviewItem, deactivateItem } from "../../shared/api";
 import { SnackbarContext } from "../../shared/snackbarContext";
 import { grey } from "@mui/material/colors";
 
+// Makes the lines around aggregated nodes rotate.
+// Very necessary.
+var lineDashOffset = 0;
+window.setInterval(function () {
+  lineDashOffset -= 0.1;
+}, 1);
+
 const Graph = () => {
   const [state, dispatch] = useContext(GraphContext);
   const { openSnackbar } = useContext(SnackbarContext);
@@ -207,7 +214,15 @@ const Graph = () => {
     return (
       <Grid
         container
-        sx={{ height: "100vh" }}
+        sx={{
+          height: "100vh",
+          backgroundSize: "25px 25px",
+          backgroundImage: `
+            radial-gradient(grey 1px, transparent 1px),
+            radial-gradient(grey 1px, transparent 1px)
+        `,
+          backgroundPosition: "0 0",
+        }}
         component={Paper}
         justifyContent="center"
         alignItems="center"
@@ -252,7 +267,8 @@ const Graph = () => {
             Type: ${state.ontologyId2Detail.nodes[node.type].name}<br/>
             Value: ${node.value}<br/>
             Reviewed: ${node.is_reviewed ? "Yes" : "No"}<br/>
-            Active: ${node.is_active ? "Yes" : "No"}`
+            Active: ${node.is_active ? "Yes" : "No"}<br/>
+            Properties: ${node?.properties && node.properties.length}`
           }
           linkVisibility={(link) => linkIsHighlighted(link._id)}
           linkCurvature="curvature"
@@ -262,7 +278,8 @@ const Graph = () => {
             Target: ${link.target.name}<br/>
             Value: ${link.value}<br/>
             Reviewed: ${link.is_reviewed ? "Yes" : "No"}<br/>
-            Active: ${link.is_active ? "Yes" : "No"}`
+            Active: ${link.is_active ? "Yes" : "No"}<br/>
+            Properties: ${link?.properties && link.properties.length}`
           }
           linkWidth={(l) => Math.min(6, l.value * 2)}
           linkDirectionalParticles={4}
@@ -310,18 +327,22 @@ const Graph = () => {
 
             // Draw solid focus halo
             if (state.currentItemId === node._id) {
-              ctx.setLineDash([]);
-              ctx.strokeStyle = alpha(node.color, 0.5);
+              ctx.save();
+              ctx.setLineDash([5, 5]);
+              ctx.strokeStyle = alpha(node.color, 0.75);
               ctx.beginPath();
               ctx.arc(node.x, node.y, nodeSize * 1.3, 0, 2 * Math.PI, false);
-              ctx.lineWidth = nodeSize * 0.075;
+              ctx.lineWidth = nodeSize * 0.1;
+              ctx.lineDashOffset = lineDashOffset;
               ctx.stroke();
             }
+            ctx.restore();
 
             // Draw node border circle
             if (!node.is_reviewed) {
               ctx.setLineDash([8, 10]);
             }
+
             ctx.strokeStyle = node.is_active
               ? node.color
               : state.settings.colors.deactivated;
