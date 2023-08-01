@@ -44,12 +44,12 @@ const Overview = () => {
       title: "Reviewed",
       color: state.settings.colors.reviewed,
       icon: <CheckBoxIcon />,
-      count: `N: ${reviewedNodesSize}/${state.startNodeCount} E: ${reviewedEdgesSize}/${state.startEdgeCount}`,
+      count: `N:${reviewedNodesSize}/${state.startNodeCount} E:${reviewedEdgesSize}/${state.startEdgeCount}`,
       showButton: reviewedSize > 0,
     },
     {
       name: "errors",
-      title: "Errors Detected",
+      title: "Errors",
       color: state.settings.colors.error,
       icon: <WarningAmberIcon />,
       count: errorSize,
@@ -76,12 +76,14 @@ const Overview = () => {
         }}
         icon={<TimelineIcon sx={{ color: theme.palette.primary.darker }} />}
       >
-        <AlertTitle>Triples</AlertTitle>
+        <AlertTitle sx={{ fontSize: 14 }}>Triples</AlertTitle>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="h6">{currentSize}</Typography>
+          <Typography fontSize={16} fontWeight={700}>
+            {currentSize}
+          </Typography>
           <Stack direction="row" alignItems="center" spacing={1}>
             {diffSize > 0 ? <ArrowDropDownIcon /> : <ArrowDropUpIcon />}
-            <Typography variant="body2">
+            <Typography fontSize={14}>
               {diffSize > 0 ? "-" : "+"} {Math.abs(diffSize)} triples
             </Typography>
           </Stack>
@@ -121,14 +123,21 @@ const ColoredAlert = ({
       }}
       action={
         showButton && (
-          <Button color="inherit" size="small" onClick={() => handleShow(name)}>
+          <Button
+            color="inherit"
+            size="small"
+            sx={{ fontSize: 10 }}
+            onClick={() => handleShow(name)}
+          >
             Show
           </Button>
         )
       }
     >
-      <AlertTitle>{title}</AlertTitle>
-      <Typography variant="h6">{count}</Typography>
+      <AlertTitle sx={{ fontSize: 14 }}>{title}</AlertTitle>
+      <Typography fontSize={16} fontWeight={600}>
+        {count}
+      </Typography>
     </Alert>
   );
 };
