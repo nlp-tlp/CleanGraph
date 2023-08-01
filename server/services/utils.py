@@ -1,6 +1,7 @@
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Any
 import random
 import string
+import collections
 
 from models import graph as graph_model
 
@@ -97,3 +98,80 @@ def gen_random_properties() -> Dict[str, Union[str, int, bool, float]]:
     ]
 
     return properties
+
+
+def flatten_nested_dict(d: Dict[str, Any], parent_key="", sep=".") -> Dict[str, Any]:
+    """
+    Flatten a nested dictionary by concatenating nested keys with a dot.
+    For example, given the input:
+    {
+        'a': {
+            'b': 1,
+            'c': {
+                'd': 2
+            }
+        },
+        'e': 3
+    }
+    The output will be:
+    {
+        'a.b': 1,
+        'a.c.d': 2,
+        'e': 3
+    }
+
+    Arguments
+    ---------
+    d: The input dictionary, potentially nested.
+    parent_key: The string to prepend to dictionary's keys.
+    sep: The separator between nested keys.
+
+    Returns
+    -------
+    A new dictionary with the same data as 'd', but with no nested dictionaries and
+    with compound string keys for nested fields.
+
+    Notes
+    -----
+    In MongoDB, updating a nested field requires using 'dot notation'. This function
+    takes a dictionary that potentially contains nested dictionaries and returns a new
+    dictionary with no nested dictionaries. Instead, the keys in the output dictionary
+    are compound strings that concatenate the keys from the input dictionary,
+    effectively mimicking the 'dot notation' required by MongoDB to reach into nested
+    fields. This is useful when the fields to be updated in the database document
+    are not known in advance or are nested at various levels.
+
+    """
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten_nested_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+
+def concatenate_arrays(
+    array1: List[Dict[str, str]], array2: List[Dict[str, str]]
+) -> List[Dict[str, str]]:
+    """
+    Concatenates two lists of dictionaries, giving precedence to the first list's elements
+    when there are duplicate 'name' and 'value_type' pairs.
+
+    Args:
+        array1: The first list of dictionaries. Each dictionary has the keys 'name', 'value', 'value_type'.
+        array2: The second list of dictionaries. Each dictionary has the keys 'name', 'value', 'value_type'.
+
+    Returns:
+        A list containing all unique dictionaries from array1 and array2. When there is a
+        name and value_type pair that appears in both lists, the corresponding dictionary
+        from array1 is included in the output list.
+    """
+    combined_dict = {
+        (item["name"], item["value_type"]): item for item in reversed(array2)
+    }
+    combined_dict.update(
+        {(item["name"], item["value_type"]): item for item in reversed(array1)}
+    )
+    return list(combined_dict.values())
