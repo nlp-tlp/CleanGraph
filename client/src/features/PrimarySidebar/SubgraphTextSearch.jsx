@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import TextField from "@mui/material/TextField";
 import { debounce } from "lodash";
+import { InputAdornment } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 
 const SubgraphTextSearch = ({ data, setResults }) => {
   const [inputValue, setInputValue] = useState("");
@@ -26,7 +28,7 @@ const SubgraphTextSearch = ({ data, setResults }) => {
 
   return (
     <TextField
-      placeholder="Search"
+      placeholder="Search subgraphs"
       variant="outlined"
       value={inputValue}
       onChange={handleInputChange}
@@ -34,12 +36,21 @@ const SubgraphTextSearch = ({ data, setResults }) => {
       fullWidth
       margin="none"
       sx={{
+        backgroundColor: "rgba(0, 0, 0, .03)",
         "& .MuiOutlinedInput-root": {
-          borderRadius: 0,
+          borderRadius: 1,
           "& fieldset": {
-            border: "none",
+            border: "1px solid rgba(0, 0, 0, .125)",
           },
         },
+        mb: 2,
+      }}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <SearchIcon />
+          </InputAdornment>
+        ),
       }}
     />
   );

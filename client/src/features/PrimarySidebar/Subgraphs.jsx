@@ -1,27 +1,14 @@
+import "./scrollbar.css";
 import React, { useContext, useEffect, useState } from "react";
-import {
-  Box,
-  Stack,
-  Typography,
-  IconButton,
-  Tooltip,
-  Divider,
-} from "@mui/material";
-import { grey } from "@mui/material/colors";
-import SortByAlphaIcon from "@mui/icons-material/SortByAlpha";
-import SortIcon from "@mui/icons-material/Sort";
+import { Tooltip } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { GraphContext } from "../../shared/context";
-import { ICON_COLOR } from "../../shared/constants";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import LightbulbIcon from "@mui/icons-material/Lightbulb";
-import PercentIcon from "@mui/icons-material/Percent";
 import { getSubgraph } from "../../shared/api";
 import { SnackbarContext } from "../../shared/snackbarContext";
 import { FixedSizeList } from "react-window";
 import SubgraphTextSearch from "./SubgraphTextSearch";
 import SubgraphListItem from "./SubgraphListItem";
-import { sortSubgraphs, putIdOnTop } from "../../shared/utils";
+import SubgraphSort from "./SubgraphSort";
 
 const Subgraphs = () => {
   const { graphId } = useParams();
@@ -54,133 +41,34 @@ const Subgraphs = () => {
     setFilteredData(state.subgraphs);
   }, [state.subgraphs]);
 
-  const handleSort = (sortType) => {
-    setFilteredData((prevState) =>
-      sortSubgraphs(prevState, sortType, !sortDescending)
-    );
-    setSortDescending(!sortDescending);
-  };
-
+  // Current size: {filteredData.length}
   return (
-    <Box p="0.25rem 1rem">
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          flexGrow: 1,
-          border: `1px solid ${grey[300]}`,
-          borderRadius: 2,
-          backgroundColor: grey[100],
-        }}
+    <>
+      <SubgraphTextSearch data={state.subgraphs} setResults={setFilteredData} />
+      <SubgraphSort
+        setFilteredData={setFilteredData}
+        sortDescending={sortDescending}
+        setSortDescending={setSortDescending}
+      />
+      <FixedSizeList
+        height={window.innerHeight - 308}
+        itemCount={filteredData.length}
+        itemSize={74}
+        width="100%"
+        className="customScrollBar"
       >
-        <>
-          <Box p={2}>
-            <Typography sx={{ fontWeight: 700 }}>
-              Subgraphs ({filteredData.length})
-            </Typography>
-          </Box>
-          <Divider />
-          <Stack
-            direction="row"
-            justifyContent="space-evenly"
-            alignItems="center"
-            p={0.5}
-          >
-            <Tooltip title="Sort alphabetically" placement="top">
-              <IconButton
-                onClick={() => handleSort("alpha")}
-                size="small"
-                sx={{ color: ICON_COLOR }}
-              >
-                <SortByAlphaIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Sort by the central nodes degree" placement="top">
-              <IconButton
-                onClick={() => handleSort("degree")}
-                size="small"
-                sx={{ color: ICON_COLOR }}
-              >
-                <SortIcon />
-              </IconButton>
-            </Tooltip>
-            {state.settings.display_errors && (
-              <IconButton
-                onClick={() => handleSort("errors")}
-                size="small"
-                sx={{ color: ICON_COLOR }}
-                disabled={!state.settings.display_errors}
-              >
-                <Tooltip title="Sort by the number of errors" placement="top">
-                  <WarningAmberIcon />
-                </Tooltip>
-              </IconButton>
-            )}
-            {state.settings.display_suggestions && (
-              <IconButton
-                onClick={() => handleSort("suggestions")}
-                size="small"
-                sx={{ color: ICON_COLOR }}
-                disabled={!state.settings.display_suggestions}
-              >
-                <Tooltip
-                  title="Sort by the number of suggestions"
-                  placement="top"
-                >
-                  <LightbulbIcon />
-                </Tooltip>
-              </IconButton>
-            )}
-            <Tooltip title="Sort by reviewed progress" placement="top">
-              <IconButton
-                onClick={() => handleSort("reviewed_progress")}
-                size="small"
-                sx={{ color: ICON_COLOR }}
-              >
-                <PercentIcon />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-          <Divider />
-          <Box>
-            <SubgraphTextSearch
-              data={state.subgraphs}
-              setResults={setFilteredData}
-            />
-          </Box>
-          <Divider />
-          <FixedSizeList
-            height={
-              state.settings.display_errors ||
-              state.settings.display_suggestions
-                ? 360
-                : 600
-            }
-            itemCount={filteredData.length}
-            itemSize={
-              state.settings.display_errors ||
-              state.settings.display_suggestions
-                ? 72
-                : 48
-            }
-            width="100%"
-          >
-            {({ index, style }) => (
-              <SubgraphListItem
-                style={style}
-                item={filteredData[index]}
-                settings={state.settings}
-                centralNodeId={state.centralNodeId}
-                handleSubGraphFilter={handleSubGraphFilter}
-                loadingSubgraph={
-                  loadingSubgraphNodeId === filteredData[index]._id
-                }
-              />
-            )}
-          </FixedSizeList>
-        </>
-      </Box>
-    </Box>
+        {({ index, style }) => (
+          <SubgraphListItem
+            style={style}
+            item={filteredData[index]}
+            settings={state.settings}
+            centralNodeId={state.centralNodeId}
+            handleSubGraphFilter={handleSubGraphFilter}
+            loadingSubgraph={loadingSubgraphNodeId === filteredData[index]._id}
+          />
+        )}
+      </FixedSizeList>
+    </>
   );
 };
 
