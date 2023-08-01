@@ -179,7 +179,7 @@ const GraphSelection = ({ loading }) => {
           >
             {loading ? (
               <Box p={2}>
-                <Stack direction="column" spacing={2} alignItems="center">
+                <Stack direction="row" spacing={2} alignItems="center">
                   <CircularProgress size={30} />
                   <Typography variant="h6" gutterBottom>
                     Loading graphs
