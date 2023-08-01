@@ -2,6 +2,7 @@ from plugin_interface import (
     CompletionModelPluginInferface,
 )
 from plugin_models import ModelInput, ModelOutput, Suggestion
+import models.graph as graph_model
 
 from typing import List, Dict
 
@@ -10,7 +11,9 @@ from node2vec import Node2Vec
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-def unsupervised_node2vec_link_prediction(triples: List[Dict]):
+def unsupervised_node2vec_link_prediction(
+    triples: List[Dict], sim_threshold: float = 0.99
+):
     """
     Unsupervised link prediction using node2vec graph embeddings. Returns links that may exist between two nodes.
     """
@@ -41,7 +44,7 @@ def unsupervised_node2vec_link_prediction(triples: List[Dict]):
     # print("got embeddings")
 
     # Perform link prediction
-    def predict_link(node1, node2, threshold=0.99) -> bool:
+    def predict_link(node1, node2, threshold=sim_threshold) -> bool:
         return (
             cosine_similarity(
                 embeddings[node1].reshape(1, -1), embeddings[node2].reshape(1, -1)
@@ -92,8 +95,8 @@ def unsupervised_node2vec_link_prediction(triples: List[Dict]):
         for l in predicted_links_set
     ]
 
-    # print(f"Predicted {len(predicted_links)} new links.")
-    # print(predicted_links[:10])
+    print(f"Predicted {len(predicted_links)} new links.")
+    print("predicted_links sample:", predicted_links[:10])
 
     suggestions = [
         Suggestion(
@@ -101,6 +104,13 @@ def unsupervised_node2vec_link_prediction(triples: List[Dict]):
             suggestion_value=f'Link may exist between this node and "{pl["tail"]}" [{pl["tail_type"]}]',
             id=pl["head_id"],
             is_node=True,
+            action=graph_model.UpdateAction(
+                data=graph_model.SuggestionUpdateActionData(
+                    head_id=pl["head_id"],
+                    tail_id=pl["tail_id"],
+                    edge_type="hello_world",
+                )
+            ),
         )
         for pl in predicted_links
     ]

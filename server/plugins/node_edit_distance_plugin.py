@@ -2,6 +2,7 @@ from plugin_interface import (
     ErrorDetectionModelPluginInterface,
 )
 from plugin_models import ModelInput, ModelOutput, Error
+import models.graph as graph_model
 
 import Levenshtein
 from typing import List, Dict, Tuple, Set
@@ -80,11 +81,11 @@ def simple_node_edit_distance(triples: List[Dict], max_distance: int = 1) -> Lis
     return output_errors
 
 
-def group_nodes_by_name_type(triples: List[Dict]) -> Dict[Tuple[str, str], List[str]]:
-    nodes = defaultdict(list)
+def group_nodes_by_name_type(triples: List[Dict]) -> Dict[Tuple[str, str], Set[str]]:
+    nodes = defaultdict(set)
     for triple in triples:
-        nodes[(triple["head"], triple["head_type"])].append(triple["head_id"])
-        nodes[(triple["tail"], triple["tail_type"])].append(triple["tail_id"])
+        nodes[(triple["head"], triple["head_type"])].add(triple["head_id"])
+        nodes[(triple["tail"], triple["tail_type"])].add(triple["tail_id"])
 
     return nodes
 
@@ -92,7 +93,7 @@ def group_nodes_by_name_type(triples: List[Dict]) -> Dict[Tuple[str, str], List[
 def find_similar_nodes(
     nodes: Dict[Tuple[str, str], List[str]], max_distance: int
 ) -> Dict[Tuple[str, str], Set[Tuple[str, str]]]:
-    unique_nodes = list(nodes.keys())
+    unique_nodes = list(nodes.keys())  # [(node_name, node_type), ...]
     errors = defaultdict(set)
 
     # Compare all names to each other
@@ -110,24 +111,35 @@ def format_errors(
     nodes: Dict[Tuple[str, str], List[str]],
 ) -> List[Dict]:
     _errors = defaultdict(list)
-
     # Align errors with ids
     for key, value in errors.items():
         node_ids = nodes[key]
         for node_id in node_ids:
-            _errors[node_id].extend(f'Name close to "{v[0]}" [{v[1]}]' for v in value)
+            _errors[node_id].extend(
+                {
+                    "description": f'Name close to "{v[0]}" [{v[1]}]',
+                    "item_name": v[0],
+                    "item_type_name": v[1],
+                }
+                for v in value
+            )
 
     output_errors = [
         Error(
             **{
-                "id": k,
+                "item_id": k,
                 "error_type": "Edit Distance Error",
-                "error_value": e,
+                "error_value": err["description"],
                 "is_node": True,
+                "action": graph_model.UpdateAction(
+                    data=graph_model.UpdateActionData(
+                        item_name=err["item_name"], item_type_name=err["item_type_name"]
+                    )
+                ),
             }
         )
         for k, v in _errors.items()
-        for e in v
+        for err in v
     ]
 
     return output_errors
