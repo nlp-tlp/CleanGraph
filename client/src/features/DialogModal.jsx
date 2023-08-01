@@ -48,10 +48,9 @@ const DialogModal = () => {
           zIndex: ZIndexes.level3,
         },
       }}
+      maxWidth={1600}
     >
-      <DialogContent sx={{ p: 0, m: 0, maxWidth: 1200, maxHeight: 1000 }}>
-        {renderView()}
-      </DialogContent>
+      <DialogContent sx={{ maxHeight: 1000 }}>{renderView()}</DialogContent>
     </Dialog>
   );
 };
