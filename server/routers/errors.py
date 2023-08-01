@@ -19,7 +19,12 @@ router = APIRouter(prefix="/errors", tags=["Errors"])
 
 @router.get("/{graph_id}")
 async def get_errors(graph_id: str, db: AssertionError = Depends(get_db)):
-    """Fetches all errors on the current graph"""
+    """Fetches all errors on the current graph
+
+    TODO
+    ----
+    - Add limit and page.
+    """
 
     try:
         graph_id = ObjectId(graph_id)
@@ -40,10 +45,10 @@ async def get_errors(graph_id: str, db: AssertionError = Depends(get_db)):
         for node in nodes_with_errors:
             _errors = [
                 graph_model.OutputError(
-                    item_id=node["_id"],
+                    # item_id=node["_id"],
                     is_node=True,
                     item_name=node["name"],
-                    item_type=node["type"],
+                    item_type=str(node["type"]),
                     **e,
                 )
                 for e in node["errors"]
