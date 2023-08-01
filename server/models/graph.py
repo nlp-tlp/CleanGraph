@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Any, Type
+from typing import List, Dict, Optional, Any, Union
 from pydantic import BaseModel, Field
 from enum import Enum
 from datetime import datetime
@@ -7,28 +7,96 @@ from bson import ObjectId
 from models.utils import PyObjectId
 
 
+class ActionEnum(str, Enum):
+    CREATE = "create"  # Create new edge /node+edge
+    DELETE = "delete"  # Delete edge and/or node
+    UPDATE = "update"  # Update edge or node
+
+
+class BaseAction(BaseModel):
+    name: ActionEnum
+    # executed: bool = False
+
+
+class UpdateActionData(BaseModel):
+    item_name: Optional[str]
+    item_type: Optional[str] = Field(
+        description='The id associated with the "item_type_name"'
+    )
+    item_type_name: Optional[str] = Field(
+        description="The human readable name of the type"
+    )
+
+
+class SuggestionUpdateActionData(BaseModel):
+    head_id: str = Field(description="The UUID of the head node")
+    tail_id: str = Field(description="The UUID of the tail node")
+    edge_type: str = Field(description="The type of the edge being added")
+
+
+class UpdateAction(BaseAction):
+    name: ActionEnum = ActionEnum.UPDATE
+    data: Union[UpdateActionData, SuggestionUpdateActionData]
+
+
+class DeleteAction(BaseAction):
+    name: ActionEnum = ActionEnum.DELETE
+
+
+class CreateAction(BaseAction):
+    name: ActionEnum = ActionEnum.CREATE
+
+
 class BaseError(BaseModel):
     error_type: str
     error_value: str
+    action: Optional[Union[UpdateAction, DeleteAction, CreateAction]]
+
+    class Config:
+        use_enum_values = True
 
 
 class Error(BaseError):
-    id: PyObjectId = Field(default_factory=PyObjectId)
+    id: PyObjectId = Field(
+        default_factory=PyObjectId, description="The UUID of the error"
+    )
+    item_id: PyObjectId = Field(
+        default_factory=PyObjectId,
+        description="The UUID of the item the error is attributed to",
+    )
     acknowledged: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
 
 
 class BaseSuggestion(BaseModel):
     suggestion_type: str
     suggestion_value: str
+    action: Optional[Union[UpdateAction, DeleteAction, CreateAction]]
+
+    class Config:
+        use_enum_values = True
 
 
 class Suggestion(BaseSuggestion):
     id: PyObjectId = Field(default_factory=PyObjectId)
+    item_id: PyObjectId = Field(
+        default_factory=PyObjectId,
+        description="The UUID of the item the suggestion is attributed to",
+    )
     acknowledged: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
 
 
 class OutputError(Error):
@@ -315,23 +383,22 @@ class MergedNode(BaseModel):
 
 
 # Download
-
-
+# TODO: add Models to errors/suggestions/properties
 class DownloadTriple(BaseModel):
     head: str
     head_type: str
-    head_properties: Dict
-    head_errors: List
-    head_suggestions: List
+    head_properties: Dict = {}
+    head_errors: List = []
+    head_suggestions: List = []
     relation: str
-    relation_properties: Dict
-    relation_errors: List
-    relation_suggestions: List
+    relation_properties: Dict = {}
+    relation_errors: List = []
+    relation_suggestions: List = []
     tail: str
     tail_type: str
-    tail_properties: Dict
-    tail_errors: List
-    tail_suggestions: List
+    tail_properties: Dict = {}
+    tail_errors: List = []
+    tail_suggestions: List = []
 
 
 class DownloadMeta(BaseModel):
@@ -350,3 +417,8 @@ class DownloadMeta(BaseModel):
 class GraphDownload(BaseModel):
     meta: DownloadMeta
     data: List[DownloadTriple]
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
