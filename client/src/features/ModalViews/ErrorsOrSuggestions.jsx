@@ -10,12 +10,14 @@ import {
 import React, { useContext, useEffect, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import { GraphContext } from "../../shared/context";
-import { getErrors } from "../../shared/api";
+import { getErrors, getSuggestions } from "../../shared/api";
 import { useParams } from "react-router-dom";
 import { SnackbarContext } from "../../shared/snackbarContext";
 import { DataGrid } from "@mui/x-data-grid";
 import moment from "moment";
 import { Link } from "react-router-dom";
+import TipsAndUpdatesIcon from "@mui/icons-material/TipsAndUpdates";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
 const ErrorsOrSuggestions = ({ context, handleClose }) => {
   const { graphId } = useParams();
@@ -23,12 +25,19 @@ const ErrorsOrSuggestions = ({ context, handleClose }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const { openSnackbar } = useContext(SnackbarContext);
+  const isErrors = context === "errors";
+  const color = state.settings.colors[isErrors ? "error" : "suggestion"];
 
   useEffect(() => {
     const getData = async () => {
       if (loading) {
         try {
-          const response = await getErrors(graphId);
+          let response;
+          if (isErrors) {
+            response = await getErrors(graphId);
+          } else {
+            response = await getSuggestions(graphId);
+          }
 
           if (response.status === 200) {
             setData(response.data);
@@ -36,7 +45,7 @@ const ErrorsOrSuggestions = ({ context, handleClose }) => {
             throw new Error();
           }
         } catch (error) {
-          openSnackbar("error", "Error", "Failed to retrieve errors.");
+          openSnackbar("error", "Error", `Failed to retrieve ${context}.`);
         } finally {
           setLoading(false);
         }
@@ -45,10 +54,6 @@ const ErrorsOrSuggestions = ({ context, handleClose }) => {
 
     getData();
   }, [loading]);
-
-  if (context === "suggestions") {
-    return <p>In progress...</p>;
-  }
 
   const columns = [
     { field: "id", hide: false },
@@ -71,7 +76,9 @@ const ErrorsOrSuggestions = ({ context, handleClose }) => {
       flex: 1,
       minWidth: 120,
       renderCell: (params) => (
-        <Link to={`/${graphId}/${params.row.id}`}>{params.value}</Link>
+        <Link to={`/${graphId}?centralNodeId=${params.row.id}`}>
+          {params.value}
+        </Link>
       ),
     },
     {
@@ -83,8 +90,8 @@ const ErrorsOrSuggestions = ({ context, handleClose }) => {
       minWidth: 120,
     },
     {
-      field: "error_type",
-      headerName: "Error Type",
+      field: isErrors ? "error_type" : "suggestion_type",
+      headerName: isErrors ? "Error Type" : "Suggestion Type",
       headerAlign: "center",
       align: "center",
 
@@ -92,8 +99,8 @@ const ErrorsOrSuggestions = ({ context, handleClose }) => {
       minWidth: 120,
     },
     {
-      field: "error_value",
-      headerName: "Error Value",
+      field: isErrors ? "error_value" : "suggestion_value",
+      headerName: isErrors ? "Error Value" : "Suggestion Value",
       headerAlign: "center",
       align: "center",
 
@@ -127,9 +134,22 @@ const ErrorsOrSuggestions = ({ context, handleClose }) => {
           alignItems="center"
         >
           <Stack direction="column">
-            <Typography variant="h6" sx={{ textTransform: "capitalize" }}>
-              {context}
-            </Typography>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              {isErrors ? (
+                <WarningAmberIcon sx={{ color: color }} />
+              ) : (
+                <TipsAndUpdatesIcon sx={{ color: color }} />
+              )}
+              <Typography
+                variant="h6"
+                sx={{
+                  textTransform: "capitalize",
+                  color: color,
+                }}
+              >
+                {context}
+              </Typography>
+            </Stack>
             <Typography variant="caption">
               Review and action {context}
             </Typography>
@@ -147,10 +167,7 @@ const ErrorsOrSuggestions = ({ context, handleClose }) => {
           <CircularProgress />
         </Box>
       ) : (
-        <Box
-          p="1rem 2rem"
-          sx={{ width: "100%", height: "100%", overflowY: "auto" }}
-        >
+        <Box p="1rem 2rem">
           <DataGrid
             rows={data}
             columns={columns}
@@ -168,39 +185,7 @@ const ErrorsOrSuggestions = ({ context, handleClose }) => {
             }}
             pageSizeOptions={[5]}
             disableRowSelectionOnClick
-            // getRowHeight={() => "auto"}
           />
-          {/* <TableContainer>
-            <Table sx={{ width: "100%" }} size="small" aria-label="a dense table">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell align="right">Type</TableCell>
-                  <TableCell align="right">Error Type</TableCell>
-                  <TableCell align="right">Error Value</TableCell>
-                  <TableCell align="right">Acknowledged</TableCell>
-                  <TableCell align="right">Link</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {data.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell component="th" scope="row">
-                      {row.item_name}
-                    </TableCell>
-                    <TableCell align="right">{row.item_type}</TableCell>
-                    <TableCell align="right">{row.error_type}</TableCell>
-                    <TableCell align="right">{row.error_value}</TableCell>
-                    <TableCell align="right">{row.acknowledged}</TableCell>
-                    <TableCell align="right">{row.item_id}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer> */}
         </Box>
       )}
     </Box>
