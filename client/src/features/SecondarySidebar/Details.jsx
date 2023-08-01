@@ -64,7 +64,7 @@ const Details = ({ handleUpdate, loading, setExpanded }) => {
   const loaded = initialValues && currentItem;
 
   const handleInfoUpdate = async () => {
-    await handleUpdate("information", values);
+    await handleUpdate({ context: "information", payload: values });
   };
 
   const handleReset = () => {
