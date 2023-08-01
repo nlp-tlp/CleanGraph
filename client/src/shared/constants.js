@@ -14,3 +14,10 @@ export const ICON_COLOR = grey[800];
 
 // Level4 is for snackbars to show above dialog/modals.
 export const ZIndexes = { level1: 1, level2: 2, level3: 3, level4: 10000 };
+
+export const ValueType2HumanName = {
+  str: "Strings",
+  bool: "Booleans",
+  float: "Floats",
+  int: "Integers",
+};
