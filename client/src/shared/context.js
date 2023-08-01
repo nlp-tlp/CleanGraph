@@ -279,11 +279,11 @@ const reducer = (state, action) => {
           ...state.ontology,
           [ontologyType]: [...state.ontology[ontologyType], newClass],
         },
-        ontologyName2Color: {
-          ...state.ontologyName2Color,
+        ontologyId2Detail: {
+          ...state.ontologyId2Detail,
           [ontologyType]: {
-            ...state.ontologyName2Color[ontologyType],
-            [newClass.name]: newClass.color,
+            ...state.ontologyId2Detail[ontologyType],
+            [newClass._id]: { name: newClass.name, color: newClass.color },
           },
         },
       };
