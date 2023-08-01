@@ -331,7 +331,7 @@ const Graph = () => {
               ctx.setLineDash([5, 5]);
               ctx.strokeStyle = alpha(node.color, 0.75);
               ctx.beginPath();
-              ctx.arc(node.x, node.y, nodeSize * 1.3, 0, 2 * Math.PI, false);
+              ctx.arc(node.x, node.y, nodeSize * 1.2, 0, 2 * Math.PI, false);
               ctx.lineWidth = nodeSize * 0.1;
               ctx.lineDashOffset = lineDashOffset;
               ctx.stroke();
