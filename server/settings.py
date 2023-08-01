@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     MONGO_DB_NAME: str = "<ENTER_DB_NAME>"
     MONGO_URI: str = "<ENTER_URI>"
 
+    PLUGIN_DIRECTORY: str = "./plugins"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
