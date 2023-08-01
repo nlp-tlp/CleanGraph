@@ -1,5 +1,5 @@
 from typing import List, Union, Optional, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from enum import Enum
 
 from models.graph import Triple, BaseSuggestion, BaseError
@@ -19,7 +19,7 @@ class ModelInput(BaseModel):
 
 
 class Error(BaseError):
-    id: str
+    item_id: str = Field(desciption="The UUID of the item the error is attributed to")
     is_node: bool
 
 
