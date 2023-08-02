@@ -7,14 +7,13 @@ from bson import ObjectId
 import traceback
 
 from loguru import logger
+from settings import settings
 
 from services.utils import generate_high_contrast_colors, gen_random_properties
 from services.plugins import execute_plugins
 from services.graph import delete_graph
 
 from models import graph as graph_model
-
-UNTYPED_GRAPH_NODE_CLASS = "Unspecified"
 
 
 async def cleanup_graph(graph_id: ObjectId, db: AsyncIOMotorDatabase):
@@ -67,7 +66,7 @@ def extract_nodes_and_edges(
     if len(node_classes) == 0:
         # Untyped graph uploaded
         logger.info("Untyped graph")
-        node_classes.add(UNTYPED_GRAPH_NODE_CLASS)
+        node_classes.add(settings.UNTYPED_GRAPH_NODE_CLASS)
 
     return nodes, triples, node_classes, edge_classes
 
@@ -103,7 +102,7 @@ async def create_insert_nodes(
 
     TODO
     ----
-    UNTYPED_GRAPH_NODE_CLASS if type_ is None else type_, # TODO: make this work for untyped graphs.
+    settings.UNTYPED_GRAPH_NODE_CLASS if type_ is None else type_, # TODO: make this work for untyped graphs.
 
     """
     node_data = []
@@ -115,7 +114,7 @@ async def create_insert_nodes(
                 name=name,
                 type=node_classes_with_ids[
                     type_
-                ],  # UNTYPED_GRAPH_NODE_CLASS if type_ is None else type_, # TODO: make this work for untyped graphs.
+                ],  # settings.UNTYPED_GRAPH_NODE_CLASS if type_ is None else type_, # TODO: make this work for untyped graphs.
                 value=frequency,
                 graph_id=graph_id,
                 properties=gen_random_properties(),

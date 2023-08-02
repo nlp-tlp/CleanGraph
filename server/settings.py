@@ -14,6 +14,13 @@ class Settings(BaseSettings):
 
     PLUGIN_DIRECTORY: str = "./plugins"
 
+    UNTYPED_GRAPH_NODE_CLASS: str = (
+        "Untyped"  # This is the "type" given to nodes in untyped graphs
+    )
+    UNTYPED_GRAPH_EDGE_CLASS: str = (
+        "Untyped"  # This is the "type" given to edges in untyped graphs
+    )
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
