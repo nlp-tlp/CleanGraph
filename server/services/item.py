@@ -1,6 +1,6 @@
 """Services for performing CRUD operations on graph items (nodes/edges)"""
 
-from typing import List, Dict, Tuple, Optional, Union, Any
+from typing import Dict
 from fastapi import HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
@@ -10,7 +10,6 @@ from collections import defaultdict
 from loguru import logger
 
 from models import graph as graph_model
-
 from models.misc import ItemClass, ItemClassWithId, ItemType, ItemUpdate, ReviewBody
 from .utils import concatenate_arrays
 
@@ -567,7 +566,6 @@ async def toggle_review(
     """
 
     try:
-        item_id = ObjectId(item_id)
         collection = "nodes" if is_node else "edges"
         updated_at = datetime.utcnow()
 
