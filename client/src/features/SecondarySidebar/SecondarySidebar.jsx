@@ -25,7 +25,17 @@ const SecondarySidebar = () => {
     properties: currentItem.properties,
   });
 
-  const [expanded, setExpanded] = useState("details");
+  // const [expanded, setExpanded] = useState("details");
+  const [panelsExpanded, setPanelsExpanded] = useState(["details"]);
+
+  const handleChange = (panel) => (event, newExpanded) => {
+    if (panelsExpanded.includes(panel)) {
+      setPanelsExpanded((prevState) => prevState.filter((p) => p !== panel));
+    } else {
+      setPanelsExpanded((prevState) => [...prevState, panel]);
+    }
+  };
+
   const { loading, showMergeModal, setShowMergeModal, handleUpdate } =
     useUpdateItem();
 
@@ -35,26 +45,6 @@ const SecondarySidebar = () => {
     currentItem?.errors.filter((e) => !e.acknowledged).length || 0;
   const notReviewedSuggestionSize =
     currentItem?.suggestions.filter((s) => !s.acknowledged).length || 0;
-
-  const handleReview = async () => {
-    await handleUpdate({
-      context: "review",
-      payload: {
-        is_reviewed: !currentItem.is_reviewed,
-      },
-    });
-  };
-
-  const handleActivation = async () => {
-    await handleUpdate({
-      context: "activation",
-      payload: { is_active: !currentItem.is_active },
-    });
-  };
-
-  const handleChange = (panel) => (event, newExpanded) => {
-    setExpanded(newExpanded ? panel : false);
-  };
 
   return (
     <Drawer
@@ -82,25 +72,17 @@ const SecondarySidebar = () => {
       <ActionTray
         currentItem={currentItem}
         currentItemIsNode={currentItemIsNode}
-        loading={loading}
-        handleReview={handleReview}
-        handleActivation={handleActivation}
-        handleUpdate={handleUpdate}
       />
 
       <CustomAccordion
-        expanded={expanded === "details"}
+        expanded={panelsExpanded.includes("details")}
         onChange={handleChange("details")}
         label="DETAILS"
       >
-        <Details
-          handleUpdate={handleUpdate}
-          loading={loading}
-          setExpanded={setExpanded}
-        />
+        <Details handleUpdate={handleUpdate} loading={loading} />
       </CustomAccordion>
       <CustomAccordion
-        expanded={expanded === "properties"}
+        expanded={panelsExpanded.includes("properties")}
         onChange={handleChange("properties")}
         label="PROPERTIES"
         value={values?.properties && Object.keys(values.properties).length}
@@ -114,7 +96,7 @@ const SecondarySidebar = () => {
       </CustomAccordion>
 
       <CustomAccordion
-        expanded={expanded === "errors"}
+        expanded={panelsExpanded.includes("errors")}
         onChange={handleChange("errors")}
         label="ERRORS"
         value={`${notReviewedErrorSize} of ${errorSize}`}
@@ -130,7 +112,7 @@ const SecondarySidebar = () => {
       </CustomAccordion>
 
       <CustomAccordion
-        expanded={expanded === "suggestions"}
+        expanded={panelsExpanded.includes("suggestions")}
         onChange={handleChange("suggestions")}
         label="SUGGESTIONS"
         value={`${notReviewedSuggestionSize} of ${suggestionSize}`}
