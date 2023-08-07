@@ -13,6 +13,7 @@ import collections
 import string
 
 from models import graph as graph_model
+from services.graph import get_item_classes
 
 router = APIRouter(prefix="/errors", tags=["Errors"])
 
@@ -28,6 +29,10 @@ async def get_errors(graph_id: str, db: AssertionError = Depends(get_db)):
 
     try:
         graph_id = ObjectId(graph_id)
+
+        nodeId2Details, edgeId2Details = await get_item_classes(
+            graph_id=graph_id, db=db
+        )
 
         nodes_with_errors = (
             await db["nodes"]
@@ -48,7 +53,7 @@ async def get_errors(graph_id: str, db: AssertionError = Depends(get_db)):
                     # item_id=node["_id"],
                     is_node=True,
                     item_name=node["name"],
-                    item_type=str(node["type"]),
+                    item_type=nodeId2Details[node["type"]]["name"],
                     **e,
                 )
                 for e in node["errors"]
