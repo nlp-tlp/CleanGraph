@@ -1,15 +1,14 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import { Tooltip } from "@mui/material";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
-import { reviewItem } from "../../shared/api";
 import { GraphContext } from "../../shared/context";
 import { SnackbarContext } from "../../shared/snackbarContext";
 import LoadingButton from "@mui/lab/LoadingButton";
+import { useReviewItem } from "../../shared/hooks/useReviewItem";
 
 const ReviewButton = () => {
   const [state, dispatch] = useContext(GraphContext);
-  const { openSnackbar } = useContext(SnackbarContext);
-  const [submitting, setSubmitting] = useState(false);
+  const { loading: submitting, handleReview } = useReviewItem();
 
   const unreviewedNodes = Object.values(state.data.nodes).filter(
     (node) => !node.is_reviewed
@@ -21,40 +20,40 @@ const ReviewButton = () => {
 
   const reviewed = unreviewedNodes + unreviewedEdges === 0;
 
-  const handleReview = async () => {
-    try {
-      setSubmitting(true);
-      // props: isNode, itemId, reviewAll, neighbours
-      const response = await reviewItem(
-        true,
-        state.centralNodeId,
-        true,
-        state.data.neighbours[state.centralNodeId]
-      );
+  // const handleReview = async () => {
+  //   try {
+  //     setSubmitting(true);
+  //     // props: isNode, itemId, reviewAll, neighbours
+  //     const response = await reviewItem(
+  // true,
+  // state.centralNodeId,
+  // true,
+  // state.data.neighbours[state.centralNodeId]
+  //     );
 
-      if (response.status === 200) {
-        if (response.data.item_reviewed) {
-          dispatch({
-            type: "REVIEW_ITEM",
-            payload: {
-              isNode: true,
-              itemId: state.centralNodeId,
-              reviewAll: true,
-              neighbours: state.data.neighbours[state.centralNodeId],
-            },
-          });
-        } else {
-          throw new Error();
-        }
-      } else {
-        throw new Error();
-      }
-    } catch (error) {
-      openSnackbar("error", "Error", "Failed to review items");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  //     if (response.status === 200) {
+  //       if (response.data.item_reviewed) {
+  //         dispatch({
+  //           type: "REVIEW_ITEM",
+  //           payload: {
+  //             isNode: true,
+  //             itemId: state.centralNodeId,
+  //             reviewAll: true,
+  //             neighbours: state.data.neighbours[state.centralNodeId],
+  //           },
+  //         });
+  //       } else {
+  //         throw new Error();
+  //       }
+  //     } else {
+  //       throw new Error();
+  //     }
+  //   } catch (error) {
+  //     openSnackbar("error", "Error", "Failed to review items");
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
 
   return (
     <Tooltip
@@ -70,7 +69,14 @@ const ReviewButton = () => {
           },
         }}
         color="success"
-        onClick={handleReview}
+        onClick={() =>
+          handleReview({
+            isNode: true,
+            itemId: state.centralNodeId,
+            reviewAll: true,
+            neighbours: state.data.neighbours[state.centralNodeId],
+          })
+        }
         disabled={reviewed}
         loading={submitting}
       >
