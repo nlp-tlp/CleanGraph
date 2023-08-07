@@ -31,10 +31,145 @@ async def read_graphs(
     return [graph_model.SimpleGraph(**g) for g in graphs]
 
 
-async def get_subgraphs():
-    """Fetches graph subgraphs"""
+async def get_subgraph_review_progress(graph_id: ObjectId, db: AsyncIOMotorDatabase):
+    """Fetches the reviewed progress on graph subgraphs
 
-    pass
+    # TODO: OPTIMISE AND MAKE MORE EFFICIENT - SHOULD HAVE LIMIT ON SUBGRAPHS TO CHECK!
+    """
+    nodes = (
+        await db["nodes"]
+        .find(
+            {"graph_id": graph_id},
+            {
+                "_id": 1,
+                "value": 1,
+                "errors": 1,
+                "suggestions": 1,
+                "is_reviewed": 1,
+            },
+        )
+        .to_list(None)
+    )
+    edges = (
+        await db["edges"]
+        .find(
+            {"graph_id": graph_id},
+            {
+                "_id": 1,
+                "is_reviewed": 1,
+            },
+        )
+        .to_list(None)
+    )
+
+    # 1. Create neighbours
+    pipeline = [
+        {"$match": {"graph_id": graph_id}},
+        {
+            "$facet": {
+                "fromHead": [
+                    {
+                        "$group": {
+                            "_id": "$head",
+                            "nodes": {"$addToSet": "$tail"},
+                            "links": {"$addToSet": "$edge"},
+                        }
+                    }
+                ],
+                "fromTail": [
+                    {
+                        "$group": {
+                            "_id": "$tail",
+                            "nodes": {"$addToSet": "$head"},
+                            "links": {"$addToSet": "$edge"},
+                        }
+                    }
+                ],
+            }
+        },
+        {"$project": {"all": {"$concatArrays": ["$fromHead", "$fromTail"]}}},
+        {"$unwind": "$all"},
+        {
+            "$group": {
+                "_id": "$all._id",
+                "nodes": {"$addToSet": "$all.nodes"},
+                "links": {"$addToSet": "$all.links"},
+            }
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "nodes": {
+                    "$reduce": {
+                        "input": "$nodes",
+                        "initialValue": [],
+                        "in": {"$setUnion": ["$$this", "$$value"]},
+                    }
+                },
+                "links": {
+                    "$reduce": {
+                        "input": "$links",
+                        "initialValue": [],
+                        "in": {"$setUnion": ["$$this", "$$value"]},
+                    }
+                },
+            }
+        },
+    ]
+
+    neighbours = await db["triples"].aggregate(pipeline).to_list(None)
+    # print("neighbours", neighbours)
+
+    # 2. Get counts of errors on all nodes/edges
+    node_counts = {
+        n["_id"]: {
+            "is_reviewed": n["is_reviewed"],
+        }
+        for n in nodes
+    }
+    edge_counts = {
+        e["_id"]: {
+            "is_reviewed": e["is_reviewed"],
+        }
+        for e in edges
+    }
+
+    reviewed_nodes = sum([n["is_reviewed"] for n in nodes])
+    reviewed_edges = sum([e["is_reviewed"] for e in edges])
+
+    # 3. Aggregate on neighbour keys
+    subgraph_progress = {}
+    for neigh in neighbours:
+        node_id = neigh["_id"]
+
+        _nodes = 1  # Starts from one as the central node isn't included in its own neighbours
+        _edges = 0
+        _nodes_reviewed = int(
+            node_counts[node_id]["is_reviewed"]
+        )  # Starts with the count of the central nodes "is_reviewed" state.
+        _edges_reviewed = 0
+
+        for n_id in neigh["nodes"]:
+            _nodes_reviewed += int(node_counts[n_id]["is_reviewed"])
+            _nodes += 1
+
+        for e_id in neigh["links"]:
+            _edges_reviewed += int(edge_counts[e_id]["is_reviewed"])
+            _edges += 1
+
+        subgraph_progress[str(node_id)] = {
+            "node_count": _nodes,
+            "edge_count": _edges,
+            "nodes_reviewed": _nodes_reviewed,
+            "edges_reviewed": _edges_reviewed,
+            "reviewed_progress": round(
+                (_nodes_reviewed + _edges_reviewed) / (_nodes + _edges) * 100
+            )
+            if _nodes + _edges > 0
+            else 0,
+        }
+
+    return reviewed_nodes, reviewed_edges, subgraph_progress
 
 
 async def read_graph(graph_id: ObjectId, db: AsyncIOMotorDatabase) -> graph_model.Graph:
@@ -167,6 +302,12 @@ async def read_graph(graph_id: ObjectId, db: AsyncIOMotorDatabase) -> graph_mode
         # print("node_counts", node_counts)
         # print("edge_counts", edge_counts)
 
+        reviewed_nodes = sum([n["is_reviewed"] for n in nodes])
+        reviewed_edges = sum([e["is_reviewed"] for e in edges])
+
+        # print("reviewed_nodes", reviewed_nodes)
+        # print("reviewed_edges", reviewed_edges)
+
         # 3. Aggregate errors on neighbour keys
         total_errors = 0
         total_suggestions = 0
@@ -221,11 +362,25 @@ async def read_graph(graph_id: ObjectId, db: AsyncIOMotorDatabase) -> graph_mode
         return graph_model.Graph(
             **db_graph,
             subgraphs=subgraphs,
+            reviewed_nodes=reviewed_nodes,
+            reviewed_edges=reviewed_edges,
             total_errors=total_errors,
             total_suggestions=total_suggestions,
         )
     except Exception as e:
         logger.error(f'Error occurred on "read graph": {e}')
+
+
+async def get_item_classes(
+    graph_id: ObjectId, db: AsyncIOMotorDatabase
+) -> Tuple[Dict[ObjectId, str], Dict[ObjectId, str]]:
+    item_classes = await db["graphs"].find_one(
+        {"_id": graph_id}, {"node_classes": 1, "edge_classes": 1, "_id": 0}
+    )
+    nodeId2Details = {nc["_id"]: nc for nc in item_classes["node_classes"]}
+    edgeId2Details = {ec["_id"]: ec for ec in item_classes["edge_classes"]}
+
+    return nodeId2Details, edgeId2Details
 
 
 def create_nodes_links(
@@ -319,11 +474,9 @@ async def get_subgraph(
     try:
         logger.info(f"Fetching subgraph: {graph_id}/{node_id}/{skip}/{limit}")
 
-        item_classes = await db["graphs"].find_one(
-            {"_id": graph_id}, {"node_classes": 1, "edge_classes": 1, "_id": 0}
+        nodeId2Details, edgeId2Details = await get_item_classes(
+            graph_id=graph_id, db=db
         )
-        node_classes = {nc["_id"]: nc["color"] for nc in item_classes["node_classes"]}
-        edge_classes = {ec["_id"]: ec["color"] for ec in item_classes["edge_classes"]}
 
         if node_id is not None:
             logger.info(f"Node supplied - no random sampling")
@@ -352,7 +505,7 @@ async def get_subgraph(
 
         focus_node = await db["nodes"].find_one({"_id": focus_node_id})
         focus_node = graph_model.Node(
-            **{**focus_node, "color": node_classes[focus_node["type"]]}
+            **{**focus_node, "color": nodeId2Details[focus_node["type"]]["color"]}
         )
 
         max_triples = await db["triples"].count_documents(
@@ -411,15 +564,15 @@ async def get_subgraph(
                 **t,
                 "head": {
                     **t["head"],
-                    "color": node_classes[ObjectId(t["head"]["type"])],
+                    "color": nodeId2Details[ObjectId(t["head"]["type"])]["color"],
                 },
                 "tail": {
                     **t["tail"],
-                    "color": node_classes[ObjectId(t["tail"]["type"])],
+                    "color": nodeId2Details[ObjectId(t["tail"]["type"])]["color"],
                 },
                 "edge": {
                     **t["edge"],
-                    "color": edge_classes[ObjectId(t["edge"]["type"])],
+                    "color": edgeId2Details[ObjectId(t["edge"]["type"])]["color"],
                 },
             }
             for t in triples
