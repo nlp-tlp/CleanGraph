@@ -15,7 +15,7 @@ import UpdateTray from "./UpdateTray";
 import { GraphContext } from "../../shared/context";
 import _ from "lodash";
 
-const Details = ({ handleUpdate, loading, setExpanded }) => {
+const Details = ({ handleUpdate, loading }) => {
   const [state, dispatch] = useContext(GraphContext);
   const [currentItem, setCurrentItem] = useState();
   const [initialValues, setInitialValues] = useState();
@@ -155,12 +155,14 @@ const Details = ({ handleUpdate, loading, setExpanded }) => {
             ))}
         </TextField>
       </Stack>
-      <UpdateTray
-        stateChanged={itemChanged}
-        handleReset={handleReset}
-        handleUpdate={handleInfoUpdate}
-        loading={loading === "information"}
-      />
+      <Box mt={2}>
+        <UpdateTray
+          stateChanged={itemChanged}
+          handleReset={handleReset}
+          handleUpdate={handleInfoUpdate}
+          loading={loading === "information"}
+        />
+      </Box>
     </Box>
   );
 };
