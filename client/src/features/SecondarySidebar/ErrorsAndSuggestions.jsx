@@ -36,12 +36,10 @@ const ErrorsAndSuggestions = ({
   handleUpdate,
 }) => {
   const context = isErrors ? "errors" : "suggestions";
-
   const [state, dispatch] = useContext(GraphContext);
   const data =
     state.data[currentItemIsNode ? "nodes" : "links"][currentItemId][context];
   const { openSnackbar } = useContext(SnackbarContext);
-  const [acknowledgingId, setAcknowledgingId] = useState();
   const [submitting, setSubmitting] = useState({ id: null, action: null });
 
   const handleActions = async (errorOrSuggestionItemId, type, payload = {}) => {
@@ -213,7 +211,7 @@ const ErrorsAndSuggestions = ({
                       />
                     ) : (
                       <ActionableChip
-                        isLoading={acknowledgingId === i.id}
+                        isLoading={submitting.id === i.id}
                         tooltipTitle={
                           isAcknowledged
                             ? "This has been acknowledged"
@@ -223,11 +221,6 @@ const ErrorsAndSuggestions = ({
                         onClick={() => handleAcknowledge(i.id)}
                         disabled={isAcknowledged}
                       />
-                      // <AcknowledgeChip
-                      //   item={i}
-                      //   handleAcknowledge={handleAcknowledge}
-                      //   acknowledgingId={acknowledgingId}
-                      // />
                     )}
                   </Stack>
                   <Typography fontSize={10} color="rgba(0,0,0,0.5)">
@@ -293,76 +286,6 @@ const ActionChips = ({ item, submitting, handleReject, handleAction }) => {
         }
       />
     </>
-  );
-};
-
-// const ActionChips = ({ item, handleReject, acknowledgingId }) => {
-//   // TODO: make loading work...
-//   if (acknowledgingId === item.id) {
-//     return <SmallSubmittingProcess />;
-//   }
-
-//   return (
-//     <>
-//       {item.acknowledged ? (
-//         <Tooltip title={"This has been acknowledged"}>
-//           <Chip
-//             key={item.id}
-//             size="small"
-//             label="Acknowledged"
-//             variant="contained"
-//             sx={{ fontSize: 10 }}
-//           />
-//         </Tooltip>
-//       ) : (
-//         <Tooltip title={`Click to reject`}>
-//           <Chip
-//             size="small"
-//             label={"Reject"}
-//             clickable
-//             sx={{ textTransform: "capitalize", fontSize: 10 }}
-//             variant="outlined"
-//             onClick={() => handleReject(item.id)}
-//           />
-//         </Tooltip>
-//       )}
-//       <Tooltip title={`Click to perform ${item.action.name} operation`}>
-//         <Chip
-//           size="small"
-//           label={`Action: ${item.action.name}`}
-//           clickable
-//           sx={{ textTransform: "capitalize", fontSize: 10 }}
-//           variant="outlined"
-//         />
-//       </Tooltip>
-//     </>
-//   );
-// };
-
-const AcknowledgeChip = ({ item, handleAcknowledge, acknowledgingId }) => {
-  const isAcknowledged = item.acknowledged;
-  if (acknowledgingId === item.id) {
-    return <SmallSubmittingProcess />;
-  }
-  return (
-    <Tooltip
-      title={
-        isAcknowledged
-          ? "This has been acknowledged"
-          : "Click to acknowledge this action"
-      }
-    >
-      <Chip
-        key={item.id}
-        size="small"
-        label={isAcknowledged ? "Acknowledged" : "Acknowledge"}
-        clickable
-        variant="outlined"
-        onClick={() => handleAcknowledge(item.id)}
-        disabled={isAcknowledged}
-        sx={{ fontSize: 10 }}
-      />
-    </Tooltip>
   );
 };
 
