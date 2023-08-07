@@ -1,6 +1,6 @@
 # CleanGraph: Human-in-the-loop Knowledge Graph Refinement and Completion
 
-🎥 Click [here](https://youtu.be/zhf8XsV8cEg) to view a short video demonstration of CleanGraph.
+![Status](https://img.shields.io/badge/Status-Work%20in%20Progress-yellow) [![Demo](https://img.shields.io/badge/Demo-Available-blue)](https://youtu.be/zhf8XsV8cEg)
 
 Correcting errors in knowledge graphs constructed from textual data is a formidable challenge using conventional tools like spreadsheet software, and is even challenging with graph database software such as Neo4J. CleanGraph emerges as the solution to this issue by providing a platform designed for the efficient management of knowledge graphs, specifically those composed of semantic triples from text.
 
@@ -27,3 +27,9 @@ We encourage you to contribute to CleanGraph! Please check out the [Contributing
 ## License
 
 CleanGraph is licensed under the terms of the MIT License. See [LICENSE](LICENSE.md) for more details.
+
+## Miscellaneous
+
+- 🎥 Click [here](https://youtu.be/zhf8XsV8cEg) to view a short video demonstration of CleanGraph.
+
+- :construction: This project/documentation is currently under active development and may be subject to change. Please feel free to contribute or report issues.
