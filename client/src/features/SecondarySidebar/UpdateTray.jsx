@@ -5,10 +5,7 @@ import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 
 const UpdateTray = ({ stateChanged, handleReset, handleUpdate, loading }) => {
   return (
-    <Box
-      sx={{ display: "flex", justifyContent: "right", width: "100%" }}
-      mt={2}
-    >
+    <Box sx={{ display: "flex", justifyContent: "right", width: "100%" }}>
       <Stack direction="row" spacing={2} alignItems="center">
         <Button
           size="small"
