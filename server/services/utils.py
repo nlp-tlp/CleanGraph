@@ -1,7 +1,8 @@
-from typing import List, Dict, Union, Any
+import ast
+import collections
 import random
 import string
-import collections
+from typing import List, Dict, Union, Any
 
 from models import graph as graph_model
 
@@ -175,3 +176,52 @@ def concatenate_arrays(
         {(item["name"], item["value_type"]): item for item in reversed(array1)}
     )
     return list(combined_dict.values())
+
+
+def infer_type(value: str) -> Union[int, float, bool, str, None]:
+    """
+    Attempt to infer and convert the type of the input value.
+
+    Args:
+        value (str): A string representing the value whose type needs to be inferred.
+
+    Returns:
+        Union[int, float, bool, str, None]: The converted value. The type of the value
+        could be int, float, bool, str, or None.
+    """
+
+    try:
+        # Use literal_eval to safely parse the value
+        return ast.literal_eval(value)
+    except (ValueError, SyntaxError):
+        # If a ValueError or SyntaxError is raised, it means that
+        # the value couldn't be parsed to any type (int, float, tuple, list, dict, bool, None)
+        # so we can assume it's a string
+        return value
+
+
+def parse_and_sanitise_properties(data: Dict[str, str]) -> List[Dict[str, Any]]:
+    """
+    Parse input dictionary, infer and convert the types of the values, and sanitise the data.
+
+    Args:
+        data (Dict[str, str]): The input dictionary where each key-value pair is a property.
+
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries where each dictionary represents a property.
+        Each dictionary contains three keys: "name", "value", and "value_type".
+        Any value that is a list or a dictionary is discarded.
+    """
+    new_data = []
+    for k, v in data.items():
+        inferred_v = infer_type(v)
+        if not isinstance(inferred_v, (list, dict)):
+            new_data.append(
+                {
+                    "name": k,
+                    "value": inferred_v,
+                    "value_type": type(inferred_v).__name__,
+                }
+            )
+
+    return new_data
