@@ -52,7 +52,9 @@ const SubgraphSort = ({
             disabled={!state.settings.display_errors}
           >
             <Tooltip title="Sort by the number of errors" placement="top">
-              <WarningAmberIcon sx={{ color: state.settings.colors.error }} />
+              <WarningAmberIcon
+              // sx={{ color: state.settings.colors.error }}
+              />
             </Tooltip>
           </ToggleButton>
         )}
@@ -63,7 +65,9 @@ const SubgraphSort = ({
             disabled={!state.settings.display_suggestions}
           >
             <Tooltip title="Sort by the number of suggestions" placement="top">
-              <LightbulbIcon sx={{ color: state.settings.colors.suggestion }} />
+              <LightbulbIcon
+              // sx={{ color: state.settings.colors.suggestion }}
+              />
             </Tooltip>
           </ToggleButton>
         )}
@@ -71,7 +75,9 @@ const SubgraphSort = ({
           value={{ field: "reviewed_progress", direction: !sortDescending }}
         >
           <Tooltip title="Sort by reviewed progress" placement="top">
-            <PercentIcon sx={{ color: state.settings.colors.reviewed }} />
+            <PercentIcon
+            // sx={{ color: state.settings.colors.reviewed }}
+            />
           </Tooltip>
         </ToggleButton>
       </ToggleButtonGroup>

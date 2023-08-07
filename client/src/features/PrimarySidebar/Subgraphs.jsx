@@ -10,18 +10,24 @@ import SubgraphTextSearch from "./SubgraphTextSearch";
 import SubgraphListItem from "./SubgraphListItem";
 import SubgraphSort from "./SubgraphSort";
 
-const Subgraphs = () => {
+const Subgraphs = ({ overviewOpen }) => {
   const { graphId } = useParams();
   const [state, dispatch] = useContext(GraphContext);
   const { openSnackbar } = useContext(SnackbarContext);
   const [filteredData, setFilteredData] = useState(state.subgraphs);
   const [loadingSubgraphNodeId, setLoadingSubgraphNodeId] = useState();
   const [sortDescending, setSortDescending] = useState(true);
+  const [currentSubgraph, setCurrentSubgraph] = useState([]);
 
   const handleSubGraphFilter = async (nodeId) => {
     try {
       setLoadingSubgraphNodeId(nodeId);
-      const response = await getSubgraph(graphId, nodeId);
+      const response = await getSubgraph({
+        graphId,
+        nodeId,
+        skip: state.page - 1,
+        limit: state.settings.graph.limit,
+      });
       if (response.status === 200) {
         dispatch({
           type: "SET_SUBGRAPH",
@@ -38,8 +44,22 @@ const Subgraphs = () => {
   };
 
   useEffect(() => {
-    setFilteredData(state.subgraphs);
+    setFilteredData(
+      state.subgraphs.filter((sg) => sg._id !== state.centralNodeId)
+    );
+    setCurrentSubgraph(
+      state.subgraphs.find((sg) => sg._id === state.centralNodeId)
+    );
   }, [state.subgraphs]);
+
+  useEffect(() => {
+    setCurrentSubgraph(
+      state.subgraphs.find((sg) => sg._id === state.centralNodeId)
+    );
+    setFilteredData((prevState) =>
+      prevState.filter((sg) => sg._id !== state.centralNodeId)
+    );
+  }, [state.centralNodeId]);
 
   // Current size: {filteredData.length}
   return (
@@ -50,9 +70,16 @@ const Subgraphs = () => {
         sortDescending={sortDescending}
         setSortDescending={setSortDescending}
       />
+      <SubgraphListItem
+        item={currentSubgraph}
+        settings={state.settings}
+        centralNodeId={state.centralNodeId}
+        handleSubGraphFilter={handleSubGraphFilter}
+        loadingSubgraph={loadingSubgraphNodeId === currentSubgraph._id}
+      />
       <FixedSizeList
-        height={window.innerHeight - 308}
-        itemCount={filteredData.length}
+        height={window.innerHeight - 308 - 78 - (overviewOpen ? 417 : 0)}
+        itemCount={filteredData.length - 1} // - 1 as current subgraph is not in list.
         itemSize={74}
         width="100%"
         className="customScrollBar"
