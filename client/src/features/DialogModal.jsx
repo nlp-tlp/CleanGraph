@@ -6,6 +6,7 @@ import Settings from "./ModalViews/Settings";
 import Help from "./ModalViews/Help";
 import { ZIndexes } from "../shared/constants";
 import ErrorsOrSuggestions from "./ModalViews/ErrorsOrSuggestions";
+import AddGraphItem from "./ModalViews/AddGraphItem";
 
 const DialogModal = () => {
   const [state, dispatch] = useContext(GraphContext);
@@ -33,6 +34,8 @@ const DialogModal = () => {
             handleClose={handleClose}
           />
         );
+      case "add":
+        return <AddGraphItem handleClose={handleClose} />;
       default:
         return null;
     }
@@ -49,6 +52,7 @@ const DialogModal = () => {
         },
       }}
       maxWidth={1600}
+      width="100%"
     >
       <DialogContent sx={{ maxHeight: 1000 }}>{renderView()}</DialogContent>
     </Dialog>
