@@ -1,12 +1,10 @@
-# CleanGraph
+# CleanGraph: Human-in-the-loop Knowledge Graph Refinement and Completion
 
 🎥 Click [here](https://youtu.be/zhf8XsV8cEg) to view a short video demonstration of CleanGraph.
 
-Correcting errors in knowledge graphs constructed from textual data is a formidable challenge using conventional tools like spreadsheet software, and is even an impossibility with platforms such as Neo4J. CleanGraph emerges as the solution to this issue by providing a platform designed for the efficient management of knowledge graphs, specifically those composed of semantic triples in the format of `<head, head_type, relation, tail, tail_type>`.
+Correcting errors in knowledge graphs constructed from textual data is a formidable challenge using conventional tools like spreadsheet software, and is even challenging with graph database software such as Neo4J. CleanGraph emerges as the solution to this issue by providing a platform designed for the efficient management of knowledge graphs, specifically those composed of semantic triples from text.
 
-CleanGraph is a robust, open-source, full-stack application that combines intuitive graph visualisation capabilities with comprehensive management features. Its frontend is built with React.js, promising a seamless, user-friendly experience with a responsive interface. Meanwhile, the backend utilises FastAPI - a cutting-edge, high-performance Python web framework, ensuring rapid and reliable application performance. For data storage, CleanGraph relies on SQLite, a lightweight, file-based database system that bolsters the application's efficiency.
-
-Together, this powerful combination of technologies enables CleanGraph to provide swift, lightweight, and effective solutions that are compatible with various platforms. It serves as a unique tool for users who need to manage and visualise knowledge graphs with ease and precision
+CleanGraph is a robust, open-source, full-stack application that combines intuitive graph visualisation capabilities with comprehensive management features including knowledge graph refinement and completion plugins. Its frontend is built with React.js, promising a seamless, user-friendly experience with a responsive interface. Meanwhile, the backend utilises FastAPI - a cutting-edge, high-performance Python web framework, ensuring rapid and reliable application performance. For data storage, CleanGraph relies on MongoDB, a NoSQL, document-based database system.
 
 _Please note that CleanGraph is specifically designed for creating, reading, updating, and deleting graph elements, and it does not provide support for complex graph querying functionalities._
 
@@ -15,144 +13,12 @@ _Please note that CleanGraph is specifically designed for creating, reading, upd
 - **Intuitive Interface**: CleanGraph provides an easy-to-use graphical interface that lets users create, edit, review, and manage graphs with ease.
 - **Multi-Platform**: Works on any system that supports Python and Node.js, including Windows, macOS, and Linux.
 
-## Installation
+## Documentation
 
-### Prerequisites
-
-Before you begin, ensure you have met the following requirements:
-
-- You have a Windows/Linux/Mac machine running Python 3.8+ and Node.js 16.15.\* (ensures the frontend can proxy to the backend, issues occur with later versions of Node).
-- You have basic knowledge of Python, JavaScript, and command-line tools.
-
-### Steps
-
-1. Clone the repository
-
-```bash
-git clone https://github.com/nlp-tlp/CleanGraph.git
-cd CleanGraph
-```
-
-2. Set up the Python FastAPI server
-
-Navigate to the backend directory
-
-```bash
-cd server
-```
-
-Create a `.env` file with the following structure - this is used to connect to the MongoDB database:
-
-> If you are not familiar with MongoDB - visit [here](https://www.mongodb.com/basics/create-database) to create a new database.
-
-```bash
-PORT=8000
-
-MONGO_DB_USERNAME="<YOUR_MONGO_DB_USERNAME>"
-MONGO_DB_PASSWORD="<YOUR_MONGO_DB_PASSWORD>"
-MONGO_CLUSTER_NAME="<YOUR_MONGO_DB_CLUSTER_NAME>"
-MONGO_DB_NAME="<YOUR_MONGO_DB_NAME>"
-MONGO_URI="mongodb+srv://${MONGO_DB_USERNAME}:${MONGO_DB_PASSWORD}@${MONGO_CLUSTER_NAME}.0aum8fo.mongodb.net/${MONGO_DB_NAME}?retryWrites=true&w=majority"
-```
-
-Create a Python virtual environment and activate it:
-
-```bash
-python -m venv venv
-source venv/bin/activate  # For Linux/macOS
-.\venv\Scripts\activate    # For Windows
-```
-
-Install the required Python packages:
-
-```bash
-pip install -r requirements.txt
-```
-
-Start the FastAPI server:
-
-```bash
-uvicorn main:app --reload
-```
-
-3. Set up the React frontend
-   In a new terminal, navigate to the frontend directory:
-
-```bash
-cd client
-```
-
-Install the required Node.js packages:
-
-```bash
-npm install
-```
-
-Start the React app:
-
-```bash
-npm start
-```
-
-Your application should now be running at http://localhost:3000!
-
-4. Optional - Setup the Documentation Site
-
-If you wish to have the documentation site available locally, you can set it up by following these steps:
-
-1. Navigate to the `docs/` directory in your terminal.
-2. Set up a new Python virtual environment.
-
-**For Windows:**
-
-```bash
-python -m venv venv
-
-```
-
-**For Linux:**
-
-```bash
-python3 -m venv venv
-```
-
-3. Activate the newly created virtual environment.
-
-**For Windows:**
-
-```bash
-.\venv\Scripts\activate
-```
-
-**For Linux:**
-
-```bash
-source venv\bin\activate
-```
-
-4. Install the necessary dependencies.
-
-```bash
-pip install -r requirements.txt
-```
-
-5. Run the documentation site server using MkDocs.
-
-```bash
-mkdocs server -a 0.0.0.0:8001
-```
-
-The documentation site should now be running on `http://localhost:8001`
-
-## Usage
-
-Use CleanGraph to create, manage, and analyse your graphs. Once the app is up and running, navigate to `http://localhost:3000`, here you can:
-
-- Create new graphs
-- Import existing data
-- Export your graphs
-- Perform complex data analysis
-- And much more!
+- [Getting Started](./docs/docs/getting_started.md)
+- [User Guide](./docs/docs/user_guide.md)
+- [Plugins](./docs/docs/plugins.md)
+- [Contact](./docs/docs/contact.md)
 
 ## Contributing
 
@@ -161,9 +27,3 @@ We encourage you to contribute to CleanGraph! Please check out the [Contributing
 ## License
 
 CleanGraph is licensed under the terms of the MIT License. See [LICENSE](LICENSE.md) for more details.
-
-## Contact
-
-If you want to contact the maintainers, you can reach us at tyler.bikaun@research.uwa.edu.au.
-
-We hope you find CleanGraph helpful in your data analysis and visualisation tasks. Enjoy the tool, and we look forward to seeing your contributions!

@@ -2,6 +2,13 @@
 
 CleanGraph can be set up on both Windows and Linux systems. The following instructions will guide you through the setup process on both operating systems.
 
+## Prerequisites
+
+Before you begin, ensure you have met the following requirements:
+
+- You have a Windows/Linux/Mac machine running Python 3.8+ and Node.js 16.15.\* (ensures the frontend can proxy to the backend, issues occur with later versions of Node).
+- You have basic knowledge of Python, JavaScript, and command-line tools.
+
 ## Project layout
 
     client/                     # Javascript React Client.
@@ -27,7 +34,7 @@ CleanGraph can be set up on both Windows and Linux systems. The following instru
 First, clone the CleanGraph repository to your local machine:
 
 ```bash
-git clone https://github.com/4theKnowledge/CleanGraph
+git clone https://github.com/nlp-tlp/CleanGraph
 ```
 
 ## Step 2: Setup the Client
@@ -80,6 +87,20 @@ Install the dependencies:
 
 ```bash
 pip install -r requirements.txt
+```
+
+Create a `.env` file with the following structure - this is used to connect to the MongoDB database:
+
+> If you are not familiar with MongoDB - visit [here](https://www.mongodb.com/basics/create-database) to create a new database.
+
+```bash
+PORT=8000
+
+MONGO_DB_USERNAME="<YOUR_MONGO_DB_USERNAME>"
+MONGO_DB_PASSWORD="<YOUR_MONGO_DB_PASSWORD>"
+MONGO_CLUSTER_NAME="<YOUR_MONGO_DB_CLUSTER_NAME>"
+MONGO_DB_NAME="<YOUR_MONGO_DB_NAME>"
+MONGO_URI="mongodb+srv://${MONGO_DB_USERNAME}:${MONGO_DB_PASSWORD}@${MONGO_CLUSTER_NAME}.0aum8fo.mongodb.net/${MONGO_DB_NAME}?retryWrites=true&w=majority"
 ```
 
 ## Step 4: Run CleanGraph
