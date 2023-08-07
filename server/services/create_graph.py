@@ -1,5 +1,5 @@
 from typing import List, Dict, Tuple, Optional, Union, Any, Set
-from collections import Counter
+from collections import Counter, defaultdict
 from fastapi import HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.errors import PyMongoError
@@ -9,7 +9,11 @@ import traceback
 from loguru import logger
 from settings import settings
 
-from services.utils import generate_high_contrast_colors, gen_random_properties
+from services.utils import (
+    generate_high_contrast_colors,
+    gen_random_properties,
+    parse_and_sanitise_properties,
+)
 from services.plugins import execute_plugins
 from services.graph import delete_graph
 
@@ -41,25 +45,47 @@ def extract_nodes_and_edges(
 
     nodes = Counter()
     triples = Counter()
-    for entry in graph.triples:
-        nodes[(entry.head, entry.head_type)] += 1
-        nodes[(entry.tail, entry.tail_type)] += 1
-        triples[
-            (
-                entry.head,
-                entry.head_type,
-                entry.relation,
-                entry.tail,
-                entry.tail_type,
-            )
-        ] += 1
 
-        # Capture classes
+    node_properties = defaultdict(
+        list
+    )  # Stores node properties as {(name, type): {...properties...}}
+    edge_properties = defaultdict(
+        list
+    )  # Stores edge properties as {(head,head_type, relation, tail, tail_type): {...properties...})}
+
+    logger.info(graph.triples)
+
+    for entry in graph.triples:
+        head_key = (entry.head, entry.head_type)
+        tail_key = (entry.tail, entry.tail_type)
+        triple_key = (
+            entry.head,
+            entry.head_type,
+            entry.relation,
+            entry.tail,
+            entry.tail_type,
+        )
+
+        # Increment frequency
+        nodes[head_key] += 1
+        nodes[tail_key] += 1
+        triples[triple_key] += 1
+
+        # Capture properties - if supplied
+        if entry.head_properties:
+            # logger.info(f"entry.head_properties: {entry.head_properties}")
+            node_properties[head_key].append(entry.head_properties)
+        if entry.tail_properties:
+            # logger.info(f"entry.tail_properties: {entry.tail_properties}")
+            node_properties[tail_key].append(entry.tail_properties)
+        if entry.relation_properties:
+            # logger.info(f"entry.relation_properties: {entry.relation_properties}")
+            edge_properties[triple_key].append(entry.relation_properties)
+
+        # Capture classes - if typed graph
         if entry.head_type:
-            # Only add if they are supplied
             node_classes.add(entry.head_type)
         if entry.tail_type:
-            # Only add if they are supplied
             node_classes.add(entry.tail_type)
         edge_classes.add(entry.relation)
 
@@ -67,6 +93,51 @@ def extract_nodes_and_edges(
         # Untyped graph uploaded
         logger.info("Untyped graph")
         node_classes.add(settings.UNTYPED_GRAPH_NODE_CLASS)
+
+    logger.info(f"triples: {triples}")
+
+    # Resolve properties
+    # logger.info(f"node_properties: {node_properties}")
+    # logger.info(f"edge_properties: {edge_properties}")
+
+    # logger.info(
+    #     f"nodes: {nodes}",
+    # )
+
+    # Enrich nodes/triples - detect property types...
+    output_nodes = {}
+    for node_key, count in nodes.items():
+        _node_properties = node_properties[node_key]
+        # Combine list of properties into single dict
+        _combined_properties = {k: v for d in _node_properties for k, v in d.items()}
+        # Sanitise properties
+        _properties = parse_and_sanitise_properties(_combined_properties)
+
+        # Update the 'nodes' dictionary directly
+        output_nodes[node_key] = {
+            "frequency": count,
+            "properties": _properties,
+        }
+
+    logger.info(f"output_nodes: {output_nodes}")
+
+    # Enrich nodes/triples - detect property types...
+    output_triples = {}
+    for triple_key, count in triples.items():
+        logger.info(f"triple key: {triple_key}")
+        _edge_properties = edge_properties[triple_key]
+        # Combine list of properties into single dict
+        _combined_properties = {k: v for d in _edge_properties for k, v in d.items()}
+        # Sanitise properties
+        _properties = parse_and_sanitise_properties(_combined_properties)
+
+        # Update the 'nodes' dictionary directly
+        output_triples[triple_key] = {
+            "frequency": count,
+            "properties": _properties,
+        }
+
+    logger.info(f"output_triples {output_triples}")
 
     return nodes, triples, node_classes, edge_classes
 
@@ -274,6 +345,7 @@ async def create_graph(graph: graph_model.InputGraph, db: AsyncIOMotorDatabase):
             node_classes=node_classes, edge_classes=edge_classes
         )
 
+        # "nodes" are {(name, type): {"frequency": int, "properties": List[Dict]}}
         node_ids = await create_insert_nodes(
             nodes_db_collection=db["nodes"],
             nodes=nodes,
