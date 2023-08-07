@@ -91,10 +91,17 @@ export const CustomAccordion = ({
 
 const PrimarySidebar = () => {
   const [state] = useContext(GraphContext);
-  const [expanded, setExpanded] = useState("panel1");
+  const [panelsExpanded, setPanelsExpanded] = useState([
+    "overview",
+    "subgraphs",
+  ]);
 
   const handleChange = (panel) => (event, newExpanded) => {
-    setExpanded(newExpanded ? panel : false);
+    if (panelsExpanded.includes(panel)) {
+      setPanelsExpanded((prevState) => prevState.filter((p) => p !== panel));
+    } else {
+      setPanelsExpanded((prevState) => [...prevState, panel]);
+    }
   };
 
   return (
@@ -112,20 +119,20 @@ const PrimarySidebar = () => {
     >
       <Toolbar />
       <CustomAccordion
-        expanded={expanded === "panel1"}
-        onChange={handleChange("panel1")}
+        expanded={panelsExpanded.includes("overview")}
+        onChange={handleChange("overview")}
         label="OVERVIEW"
         title="Sneakpeek coming soon!"
       >
         <Overview />
       </CustomAccordion>
       <CustomAccordion
-        expanded={expanded === "panel2"}
-        onChange={handleChange("panel2")}
+        expanded={panelsExpanded.includes("subgraphs")}
+        onChange={handleChange("subgraphs")}
         label="SUBGRAPHS"
         value={state.subgraphs.length}
       >
-        <Subgraphs />
+        <Subgraphs overviewOpen={panelsExpanded.includes("overview")} />
       </CustomAccordion>
     </Drawer>
   );
