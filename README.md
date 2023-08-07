@@ -23,6 +23,7 @@ _Please note: CleanGraph is specifically tailored for creating, reading, updatin
 - [Getting Started](./docs/docs/getting_started.md)
 - [User Guide](./docs/docs/user_guide.md)
 - [Plugins](./docs/docs/plugins.md)
+- [Tutorial (coming soon!)](./docs/docs/tutorial.md)
 - [Contact](./docs/docs/contact.md)
 
 ## Contributing
