@@ -112,6 +112,11 @@ class OutputError(Error):
 
 
 class OutputSuggestion(Suggestion):
+    item_id: PyObjectId
+    is_node: bool
+    item_name: str
+    item_type: Optional[str]
+
     class Config:
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
@@ -192,11 +197,11 @@ class Edge(Item):
         json_encoders = {ObjectId: str}
 
 
-class BaseTriple(BaseModel):
-    graph_id: str
-    source_id: str
-    target_id: str
-    relation_id: str
+class CreateTriple(BaseModel):
+    head: PyObjectId
+    edge: PyObjectId
+    tail: PyObjectId
+    graph_id: PyObjectId
 
 
 class ItemClass(BaseModel):
@@ -258,13 +263,16 @@ class BaseGraph(BaseModel):
 class Triple(BaseModel):
     head: str
     head_type: Optional[str]
+    # head_frequency: Optional[int]
     head_properties: Optional[Dict]
     head_errors: Optional[Dict]
     relation: str = Field(description="Relation type")
+    # relation_frequency: Optional[int]
     relation_properties: Optional[Dict]
     relation_errors: Optional[Dict]
     tail: str
     tail_type: Optional[str]
+    # tail_frequency: Optional[int]
     tail_properties: Optional[Dict]
     tail_errors: Optional[Dict]
 
@@ -297,6 +305,14 @@ class SubGraph(BaseModel):
         default=0, ge=0, description="Number of suggestions on the entire subgraph"
     )
     reviewed_progress: int = Field(ge=0, description="Progress made reviewing subgraph")
+    node_count: int = Field(ge=0, description="The number of nodes on the subgraph")
+    edge_count: int = Field(ge=0, description="The number of edges on the subgraph")
+    nodes_reviewed: int = Field(
+        ge=0, description="The number of subgraph nodes reviewed"
+    )
+    edges_reviewed: int = Field(
+        ge=0, description="The number of subgraph edges reviewed"
+    )
 
 
 class Graph(CreateGraph):
@@ -308,6 +324,8 @@ class Graph(CreateGraph):
     total_suggestions: int
     start_node_count: int
     start_edge_count: int
+    reviewed_nodes: int
+    reviewed_edges: int
 
     class Config:
         allow_population_by_field_name = True
@@ -360,9 +378,11 @@ class GraphData(BaseModel):
 
 
 class GraphDataWithFocusNode(GraphData):
-    central_node_id: str = Field(description="UUID of the subgraphs central node")
+    central_node_id: str = Field(description="The UUID of the subgraphs central node")
     max_triples: int
     reviewed: Optional[float]
+    skip: int
+    limit: int
 
     class Config:
         allow_population_by_field_name = True
