@@ -85,6 +85,17 @@ const Editor = ({
 
   const previewOnly = values.data.length > 5000;
 
+  let previewSample;
+  try {
+    const parsedData = JSON.parse(values.data);
+    if (Array.isArray(parsedData)) {
+      previewSample = JSON.stringify(parsedData.slice(0, 10));
+    } else {
+      previewSample = "Data is not an array"; // Handle non-array data as needed
+    }
+  } catch (error) {
+    previewSample = "Data is not JSON parsable"; // Handle the error as needed
+  }
   return (
     <Box display="flex" flexDirection="column">
       <Stack
@@ -161,12 +172,13 @@ const Editor = ({
           multiline
           rows={16}
           onChange={handleDataChange}
-          value={previewOnly ? "" : values.data}
+          value={previewOnly ? previewSample : values.data}
           fullWidth
           margin="normal"
           autoComplete="false"
           error={errors?.length > 0}
           readOnly={previewOnly}
+          disabled={previewOnly}
         />
       </Box>
       <Box>
