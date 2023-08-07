@@ -5,15 +5,20 @@ import SubmittingProgress from "./SubmittingProgress";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import SwapHorizontalCircleIcon from "@mui/icons-material/SwapHorizontalCircle";
+import { useReviewItem } from "../../shared/hooks/useReviewItem";
+import { useUpdateItem } from "../../shared/hooks/useUpdateItem";
 
-const ActionTray = ({
-  currentItem,
-  currentItemIsNode,
-  loading,
-  handleReview,
-  handleActivation,
-  handleUpdate,
-}) => {
+const ActionTray = ({ currentItem, currentItemIsNode }) => {
+  const { loading: reviewLoading, handleReview } = useReviewItem();
+  const { loading, handleUpdate } = useUpdateItem();
+
+  const handleActivation = async () => {
+    await handleUpdate({
+      context: "activation",
+      payload: { is_active: !currentItem.is_active },
+    });
+  };
+
   const reverseEdgeDirection = async () => {
     await handleUpdate({
       context: "reverseEdgeDirection",
@@ -34,10 +39,18 @@ const ActionTray = ({
             currentItem.is_reviewed ? "unreviewed" : "reviewed"
           }`}
         >
-          {loading === "review" ? (
+          {reviewLoading ? (
             <SubmittingProgress />
           ) : (
-            <IconButton onClick={handleReview}>
+            <IconButton
+              onClick={() =>
+                handleReview({
+                  isNode: currentItemIsNode,
+                  itemId: currentItem._id,
+                  reviewAll: false,
+                })
+              }
+            >
               <CheckBoxIcon
                 fontSize="small"
                 color={currentItem.is_reviewed ? "success" : "primary"}
