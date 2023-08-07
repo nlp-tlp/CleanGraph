@@ -34,10 +34,25 @@ cd CleanGraph
 ```
 
 2. Set up the Python FastAPI server
-   Navigate to the backend directory
+
+Navigate to the backend directory
 
 ```bash
 cd server
+```
+
+Create a `.env` file with the following structure - this is used to connect to the MongoDB database:
+
+> If you are not familiar with MongoDB - visit [here](https://www.mongodb.com/basics/create-database) to create a new database.
+
+```bash
+PORT=8000
+
+MONGO_DB_USERNAME="<YOUR_MONGO_DB_USERNAME>"
+MONGO_DB_PASSWORD="<YOUR_MONGO_DB_PASSWORD>"
+MONGO_CLUSTER_NAME="<YOUR_MONGO_DB_CLUSTER_NAME>"
+MONGO_DB_NAME="<YOUR_MONGO_DB_NAME>"
+MONGO_URI="mongodb+srv://${MONGO_DB_USERNAME}:${MONGO_DB_PASSWORD}@${MONGO_CLUSTER_NAME}.0aum8fo.mongodb.net/${MONGO_DB_NAME}?retryWrites=true&w=majority"
 ```
 
 Create a Python virtual environment and activate it:
@@ -80,6 +95,54 @@ npm start
 ```
 
 Your application should now be running at http://localhost:3000!
+
+4. Optional - Setup the Documentation Site
+
+If you wish to have the documentation site available locally, you can set it up by following these steps:
+
+1. Navigate to the `docs/` directory in your terminal.
+2. Set up a new Python virtual environment.
+
+**For Windows:**
+
+```bash
+python -m venv venv
+
+```
+
+**For Linux:**
+
+```bash
+python3 -m venv venv
+```
+
+3. Activate the newly created virtual environment.
+
+**For Windows:**
+
+```bash
+.\venv\Scripts\activate
+```
+
+**For Linux:**
+
+```bash
+source venv\bin\activate
+```
+
+4. Install the necessary dependencies.
+
+```bash
+pip install -r requirements.txt
+```
+
+5. Run the documentation site server using MkDocs.
+
+```bash
+mkdocs server -a 0.0.0.0:8001
+```
+
+The documentation site should now be running on `http://localhost:8001`
 
 ## Usage
 
