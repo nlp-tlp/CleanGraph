@@ -7,8 +7,13 @@ const initialState = {
   graph: { name: "", createdAt: "" },
   data: { nodes: [], links: [], neighbours: [] },
   settings: {
-    graph: { display_edge_labels: true, node_size: "medium", limit: 10 },
+    graph: {
+      display_edge_labels: true,
+      node_size: "medium",
+      // limit: 10,
+    },
   },
+  page: 1,
   subgraphs: [],
   ontology: [],
   ontologyId2Detail: { nodes: {}, edges: {} },
@@ -16,6 +21,8 @@ const initialState = {
   currentItemId: null,
   currentItemIsNode: null,
   maxTriples: 0,
+  reviewedNodes: 0,
+  reviewedEdges: 0,
   modal: {
     open: null,
     view: null,
@@ -35,7 +42,7 @@ const updateEdgeDirection = (state, itemId, newItemValues) => {
 const updateSubgraphs = (state, itemId, newItemValues) => {
   return state.subgraphs.map((sg) =>
     sg._id === itemId
-      ? { ...sg, name: newItemValues.name, type: newItemValues.type }
+      ? { ...sg, ...newItemValues } //name: newItemValues.name, type: newItemValues.type }
       : sg
   );
 };
@@ -77,6 +84,8 @@ const reducer = (state, action) => {
         totalSuggestions: action.payload.total_suggestions,
         startNodeCount: action.payload.start_node_count,
         startEdgeCount: action.payload.start_edge_count,
+        reviewedNodes: action.payload.reviewed_nodes,
+        reviewedEdges: action.payload.reviewed_edges,
       };
     }
     case "SET_SUBGRAPH":
@@ -94,7 +103,27 @@ const reducer = (state, action) => {
         maxTriples: action.payload.max_triples,
         // subgraphs: putIdOnTop(state.subgraphs, action.payload.central_node_id),
         loading: false,
+        page: 1,
       };
+    case "PAGINATION": {
+      // Subgraph pagination - TODO: make not violate DRY with "SET_SUBGRAPH"...
+      return {
+        ...state,
+        data: {
+          nodes: action.payload.nodes,
+          links: action.payload.links,
+          neighbours: action.payload.neighbours,
+        },
+        currentItemId: action.payload.central_node_id,
+        currentItemIsNode: true,
+        centralNodeId: action.payload.central_node_id,
+        maxTriples: action.payload.max_triples,
+        // subgraphs: putIdOnTop(state.subgraphs, action.payload.central_node_id),
+        loading: false,
+        page: action.payload.page,
+      };
+    }
+
     case "SET_LOADING": {
       return { ...state, loading: action.payload };
     }
@@ -145,10 +174,16 @@ const reducer = (state, action) => {
       };
     }
     case "UPDATE_SETTINGS":
+      // If "limit" changed, page will be reset.
+
       return {
         ...state,
         settings: { ...state.settings, ...action.payload },
         graph: { ...state.graph, updatedAt: new Date().toISOString() },
+        page:
+          action.payload.graph.limit !== state.settings.graph.limit
+            ? 1
+            : state.page,
       };
 
     case "DELETE_PROPERTY": {
@@ -198,7 +233,15 @@ const reducer = (state, action) => {
     }
 
     case "REVIEW_ITEM":
-      const { isNode, itemId, reviewAll, neighbours } = action.payload;
+      const {
+        isNode,
+        itemId,
+        reviewAll,
+        neighbours,
+        reviewedNodes,
+        reviewedEdges,
+        subgraphProgress,
+      } = action.payload;
       const itemType = isNode ? "nodes" : "links";
 
       // Make a copy of the current state to avoid mutating it directly
@@ -234,6 +277,17 @@ const reducer = (state, action) => {
           itemToUpdate.updated_at = updatedAt;
         }
       }
+
+      // Update subgraph values
+      // TODO: MAKE MORE EFFICIENT; ONLY UPDATE THOSE THAT PARTICIPATE IN REVIEW ACTION
+      newState.subgraphs = newState.subgraphs.map((sg) => ({
+        ...sg,
+        ...subgraphProgress[sg._id],
+      }));
+
+      // Update overall review progress...
+      newState.reviewedNodes = reviewedNodes;
+      newState.reviewedEdges = reviewedEdges;
 
       return newState;
 
@@ -291,12 +345,11 @@ const reducer = (state, action) => {
 
     case "UPDATE_CLASS_ITEM": {
       const { updatedClass, isNode } = action.payload;
-      const ontologyType = isNode ? "nodes" : "links";
-
+      const ontologyType = isNode ? "nodes" : "edges";
       // Make a copy of the current state to avoid mutating it directly
       const newState = JSON.parse(JSON.stringify(state));
 
-      // Find the item to update and change its acknowledged property
+      // Find the class to update
       const classToUpdate = newState.ontology[ontologyType].find(
         (item) => item._id === updatedClass.id
       );
@@ -306,6 +359,15 @@ const reducer = (state, action) => {
         classToUpdate.color = updatedClass.color;
       }
 
+      if (isNode) {
+        const nodeId2Detail = newState.ontologyId2Detail.nodes[updatedClass.id];
+        nodeId2Detail.name = updatedClass.name;
+        nodeId2Detail.color = updatedClass.color;
+      } else {
+        const edgeId2Detail = newState.ontologyId2Detail.edges[updatedClass.id];
+        edgeId2Detail.name = updatedClass.name;
+        edgeId2Detail.color = updatedClass.color;
+      }
       return newState;
     }
 
