@@ -127,7 +127,20 @@ const Properties = ({ itemId, itemIsNode, values, setValues }) => {
           </Box>
         ))}
       </Box>
-      {hasProperties && <UpdateTray />}
+      {hasProperties && (
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <IconButton disabled>
+            <Tooltip title="Click to add new property">
+              <AddCircleIcon />
+            </Tooltip>
+          </IconButton>
+          <UpdateTray />
+        </Stack>
+      )}
     </Box>
   );
 };
