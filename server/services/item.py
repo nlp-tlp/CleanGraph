@@ -12,6 +12,7 @@ from loguru import logger
 from models import graph as graph_model
 from models.misc import ItemClass, ItemClassWithId, ItemType, ItemUpdate, ReviewBody
 from .utils import concatenate_arrays
+from .graph import get_subgraph_review_progress
 
 
 async def delete_property(
@@ -255,6 +256,10 @@ async def merge_nodes(
             errors=total_errors,
             suggestions=total_suggestions,
             reviewed_progress=total_reviewed / total_items,
+            node_count=0,
+            edge_count=0,
+            nodes_reviewed=0,
+            edges_reviewed=0,
         )
 
         return graph_model.MergedNode(
@@ -568,6 +573,8 @@ async def toggle_review(
     try:
         collection = "nodes" if is_node else "edges"
         updated_at = datetime.utcnow()
+        node_diff = 0
+        edge_diff = 0
 
         item = await db[collection].find_one({"_id": item_id})
 
@@ -591,6 +598,7 @@ async def toggle_review(
                 },
                 {"$set": {"is_reviewed": True, "updated_at": updated_at}},
             )
+
             updated_edges = await db["edges"].update_many(
                 {
                     "_id": {
@@ -615,17 +623,91 @@ async def toggle_review(
 
             item_reviewed = result.modified_count > 0
 
-        # TODO: Returns updated reviewed_progress for all items involved
+            if item_reviewed:
+                if is_node:
+                    node_diff = 1 if not is_reviewed else -1
+                else:
+                    edge_diff = 1 if not is_reviewed else -1
 
-        # Populate all triples where the item is involved
-        # 1. Fetch triples where item matches head/relation/tail
-        # 2. Populate "is_reviewed" field
-        # 3. Count is_reviewed field
-        # 4. Count subgraph size
-        # 5. Return [{node_id: progress}, ...]
+        # # TODO: Returns updated reviewed_progress for all items involved
+        # if is_node:
+        #     match_query = {"$match": {"$or": [{"head": item_id}, {"tail": item_id}]}}
+        # else:
+        #     match_query = {"$match": {"edge": item_id}}
+
+        # pipeline = [
+        #     match_query,
+        #     {
+        #         "$facet": {
+        #             "fromHead": [
+        #                 {
+        #                     "$group": {
+        #                         "_id": "$head",
+        #                         "nodes": {"$addToSet": "$tail"},
+        #                         "links": {"$addToSet": "$edge"},
+        #                     }
+        #                 }
+        #             ],
+        #             "fromTail": [
+        #                 {
+        #                     "$group": {
+        #                         "_id": "$tail",
+        #                         "nodes": {"$addToSet": "$head"},
+        #                         "links": {"$addToSet": "$edge"},
+        #                     }
+        #                 }
+        #             ],
+        #         }
+        #     },
+        #     {"$project": {"all": {"$concatArrays": ["$fromHead", "$fromTail"]}}},
+        #     {"$unwind": "$all"},
+        #     {
+        #         "$group": {
+        #             "_id": "$all._id",
+        #             "nodes": {"$addToSet": "$all.nodes"},
+        #             "links": {"$addToSet": "$all.links"},
+        #         }
+        #     },
+        #     {
+        #         "$project": {
+        #             "_id": 1,
+        #             "nodes": {
+        #                 "$reduce": {
+        #                     "input": "$nodes",
+        #                     "initialValue": [],
+        #                     "in": {"$setUnion": ["$$this", "$$value"]},
+        #                 }
+        #             },
+        #             "links": {
+        #                 "$reduce": {
+        #                     "input": "$links",
+        #                     "initialValue": [],
+        #                     "in": {"$setUnion": ["$$this", "$$value"]},
+        #                 }
+        #             },
+        #         }
+        #     },
+        # ]
+
+        # neighbours = await db["triples"].aggregate(pipeline).to_list(None)
+        # print("neighbours", neighbours)
 
         # , "reviewed_progress": 0
-        return {"item_reviewed": item_reviewed}
+
+        (
+            reviewed_nodes,
+            reviewed_edges,
+            sg_progress,
+        ) = await get_subgraph_review_progress(graph_id=item["graph_id"], db=db)
+
+        return {
+            "item_reviewed": item_reviewed,
+            "node_diff": node_diff,
+            "edge_diff": edge_diff,
+            "reviewed_nodes": reviewed_nodes,
+            "reviewed_edges": reviewed_edges,
+            "subgraph_progress": sg_progress,
+        }
 
     except:
         traceback.print_exc()
