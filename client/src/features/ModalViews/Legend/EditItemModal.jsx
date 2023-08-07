@@ -89,7 +89,6 @@ const EditItemModal = ({ openModal, handleModalClose, item }) => {
 
   const handleEditClass = async () => {
     try {
-      // Call API
       setSubmitting(true);
       const response = await updateClass(
         graphId,
