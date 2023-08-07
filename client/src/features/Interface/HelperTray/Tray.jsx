@@ -12,8 +12,9 @@ import HelpIcon from "@mui/icons-material/Help";
 import SettingsIcon from "@mui/icons-material/Settings";
 import CategoryIcon from "@mui/icons-material/Category";
 import DownloadForOfflineIcon from "@mui/icons-material/DownloadForOffline";
-import { GraphContext } from "../../shared/context";
-import { ICON_COLOR } from "../../shared/constants";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
+import { GraphContext } from "../../../shared/context";
+import { ICON_COLOR } from "../../../shared/constants";
 import axios from "axios";
 import { saveAs } from "file-saver";
 
@@ -26,6 +27,11 @@ const HelperTray = () => {
   };
 
   const icons = [
+    {
+      icon: <AddCircleIcon fontSize="small" sx={{ color: ICON_COLOR }} />,
+      viewOption: "add",
+      title: "Click to add new graph item",
+    },
     {
       icon: <CategoryIcon fontSize="small" sx={{ color: ICON_COLOR }} />,
       viewOption: "legend",
