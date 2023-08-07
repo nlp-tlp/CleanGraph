@@ -35,10 +35,13 @@ const NodeMerge = ({ open, handleClose, data }) => {
           dispatch({ type: "MERGE_NODES", payload: response.data });
           openSnackbar("success", "Success", "Successfully merged nodes");
           // Reload the page with the new node as the centralNodeId... easier than updating state...
-          const response2 = await getSubgraph(
-            graphId,
-            response.data.new_node._id
-          );
+          const response2 = await getSubgraph({
+            graphId: graphId,
+            nodeId: response.data.new_node._id,
+            page: 0,
+            limit: state.settings.graph.limit,
+          });
+
           if (response2.status === 200) {
             dispatch({ type: "SET_SUBGRAPH", payload: response2.data });
           } else {
