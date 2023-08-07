@@ -30,12 +30,8 @@ const Overview = () => {
   const errorSize = state?.totalErrors || 0;
   const suggestionSize = state?.totalSuggestions || 0;
 
-  const reviewedNodesSize = Object.values(state.data.nodes).filter(
-    (n) => n.is_reviewed
-  ).length;
-  const reviewedEdgesSize = Object.values(state.data.links).filter(
-    (l) => l.is_reviewed
-  ).length;
+  const reviewedNodesSize = state.reviewedNodes;
+  const reviewedEdgesSize = state.reviewedEdges;
   const reviewedSize = reviewedNodesSize + reviewedEdgesSize;
 
   const alerts = [
