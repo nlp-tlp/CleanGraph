@@ -91,6 +91,7 @@ const SubgraphListItem = ({
               title={`Click to toggle the (${item.name}) [${
                 state.ontologyId2Detail.nodes[item.type].name
               }] subgraph of size ${item.value}`}
+              placement="right"
             >
               <Box>
                 <Typography
@@ -107,7 +108,13 @@ const SubgraphListItem = ({
                 )}
               </Box>
             </Tooltip>
-            <GradientChip progress={item.reviewed_progress} />
+            <GradientChip
+              progress={Math.round(
+                ((item.edges_reviewed + item.nodes_reviewed) /
+                  (item.edge_count + item.node_count)) *
+                  100
+              )}
+            />
           </Stack>
         )}
       </Box>
