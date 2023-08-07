@@ -70,3 +70,11 @@ class ReviewBody(BaseModel):
         if review_all and neighbours is None:
             raise ValueError("neighbours must be provided if review_all is True")
         return values
+
+
+class AddItemsBody(BaseModel):
+    head_name: str = Field(description="The name of the head node")
+    head_type: str = Field(description="The type UUID of the head node")
+    edge: str = Field(description="The type UUID of the edge")
+    tail_name: str = Field(description="The name of the tail node")
+    tail_type: str = Field(description="The type UUID of the tail node")
