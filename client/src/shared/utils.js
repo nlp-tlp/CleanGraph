@@ -107,6 +107,14 @@ export const readFile = (fileMeta, setData) => {
   };
 };
 
+export const calcSubgraphProgress = (subgraph) => {
+  return Math.round(
+    ((subgraph.edges_reviewed + subgraph.nodes_reviewed) /
+      (subgraph.edge_count + subgraph.node_count)) *
+      100
+  );
+};
+
 export const sortSubgraphs = (
   subgraphs,
   sortType = "alpha",
