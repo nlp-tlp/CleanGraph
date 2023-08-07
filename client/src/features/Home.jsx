@@ -84,7 +84,7 @@ const Home = () => {
         <Tooltip title="Navigate to the CleanGraph GitHub Repository">
           <IconButton
             component="a"
-            href="https://github.com/4theKnowledge/CleanGraph"
+            href="https://github.com/nlp-tlp/CleanGraph"
             target="_blank"
             rel="noopener noreferrer"
             sx={{
