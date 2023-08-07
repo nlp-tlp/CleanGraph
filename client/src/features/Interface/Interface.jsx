@@ -14,11 +14,11 @@ import { GraphContext } from "../../shared/context";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import PrimarySidebar from "../PrimarySidebar/PrimarySidebar";
 import Pagination from "./Pagination";
-import HelperTray from "../HelperTray";
+import HelperTray from "./HelperTray";
 import ReviewButton from "./ReviewButton";
 import SecondarySidebar from "../SecondarySidebar";
 import DialogModal from "../DialogModal";
-import { getSampleSubgraph, getGraphData } from "../../shared/api";
+import { getGraphData, getSubgraph } from "../../shared/api";
 import { SnackbarContext } from "../../shared/snackbarContext";
 import { DRAWER_WIDTH, ZIndexes } from "../../shared/constants";
 
@@ -27,20 +27,49 @@ const Interface = () => {
   const [state, dispatch] = useContext(GraphContext);
   const { openSnackbar } = useContext(SnackbarContext);
   const navigate = useNavigate();
-
+  const [loaded, setLoaded] = useState(false);
   let [searchParams, setSearchParams] = useSearchParams();
+  let centralNodeId = searchParams.get("centralNodeId");
 
-  const centralNodeId = searchParams.get("centralNodeId");
-  const limit = searchParams.get("limit") ?? state.settings.graph.limit;
-  const [page, setPage] = useState(searchParams.get("page") ?? 0);
+  useEffect(() => {
+    const fetchGraph = async () => {
+      try {
+        const res = await getGraphData(graphId);
 
-  // console.log("centralNodeId", centralNodeId, "limit", limit, "page", page);
+        if (res.status === 200) {
+          dispatch({ type: "SET_GRAPH", payload: res.data });
+          setLoaded(true);
+        } else {
+          throw new Error();
+        }
+      } catch (err) {
+        openSnackbar("error", "Error", "Error fetching graph");
+        navigate("/home");
+      }
+    };
+    fetchGraph();
+  }, [graphId]);
 
   useEffect(() => {
     const fetchGraphData = async () => {
+      console.log('"fetchGraphData"', "limit", state.settings.graph.limit);
       try {
-        const response = await getSampleSubgraph(graphId);
+        // if centralNodeId is the string "null", set it to null
+        if (centralNodeId === "null") {
+          centralNodeId = null;
+        }
 
+        let params = {
+          graphId: graphId,
+          skip: 0,
+          limit: state.settings.graph.limit,
+        };
+
+        if (centralNodeId) {
+          params.nodeId = centralNodeId;
+        }
+
+        const response = await getSubgraph(params);
         if (response.status === 200) {
           dispatch({ type: "SET_SUBGRAPH", payload: response.data });
         }
@@ -50,28 +79,27 @@ const Interface = () => {
       }
     };
 
-    const fetchGraph = async () => {
-      try {
-        const res = await getGraphData(graphId);
-        dispatch({ type: "SET_GRAPH", payload: res.data });
-        fetchGraphData();
-      } catch (err) {
-        openSnackbar("error", "Error", "Error fetching graph");
-        navigate("/home");
-      }
-    };
+    if (loaded) {
+      fetchGraphData();
+    }
+  }, [loaded]);
 
-    fetchGraph();
-  }, [graphId]);
+  useEffect(() => {
+    // console.log(
+    //   "limit or page changed",
+    //   state.settings.graph.limit,
+    //   state.page
+    // );
+    setLoaded(false);
+  }, [state.settings.graph.limit, state.page]);
 
   useEffect(() => {
     setSearchParams((prevState) => ({
       ...prevState,
       centralNodeId: state.centralNodeId,
-      limit: state.settings.graph.limit,
-      page: page,
+      page: state.page,
     }));
-  }, [state.centralNodeId, state.settings.graph.limit, page]);
+  }, [state.centralNodeId, state.page]);
 
   return (
     <>
@@ -126,7 +154,7 @@ const Interface = () => {
                       <Skeleton variant="rectangular" width={300} />
                     ) : (
                       <>
-                        <Pagination page={page} setPage={setPage} />
+                        <Pagination />
                         <HelperTray />
                       </>
                     )}
