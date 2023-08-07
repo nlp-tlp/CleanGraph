@@ -1,12 +1,11 @@
 from typing import List, Dict, Optional
-from fastapi import APIRouter, Depends, Query, Body
+from fastapi import APIRouter, Depends, Query, Body, HTTPException
 from dependencies import get_db
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 
-import services.create_graph as create_graph_services
-import services.graph as graph_services
-import services.item as item_services
+import random
+
 from models import graph as graph_model
 from models.misc import (
     Acknowledge,
@@ -16,7 +15,11 @@ from models.misc import (
     ItemClassWithId,
     ItemUpdate,
     ReviewBody,
+    AddItemsBody,
 )
+import services.create_graph as create_graph_services
+import services.graph as graph_services
+import services.item as item_services
 
 
 router = APIRouter(prefix="/graph", tags=["Graph"])
@@ -196,3 +199,198 @@ async def update_item_class(
     return await item_services.update_item_class(
         graph_id=ObjectId(graph_id), item_class=item_class, db=db
     )
+
+
+@router.get("/items/{graph_id}")
+async def get_graph_items(graph_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+    """Gets unique graph items"""
+
+    graph_id = ObjectId(graph_id)
+
+    print("graph_id", graph_id)
+
+    graph_classes = await db["graphs"].find_one(
+        {"_id": graph_id}, {"node_classes": 1, "edge_classes": 1}
+    )
+
+    nodes_names = (
+        await db["nodes"].find({"graph_id": graph_id}, {"name": 1}).to_list(None)
+    )
+
+    unique_node_names = set([n["name"] for n in nodes_names])
+
+    return {
+        "node_names": unique_node_names,
+        "node_types": [
+            {**nc, "_id": str(nc["_id"])} for nc in graph_classes["node_classes"]
+        ],
+        "edge_types": [
+            {**ec, "_id": str(ec["_id"])} for ec in graph_classes["edge_classes"]
+        ],
+    }
+
+
+@router.post("/item/{graph_id}")
+async def add_graph_items(
+    graph_id: str,
+    data: AddItemsBody = Body(...),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Adds a new item(s) to the graph.
+
+    Two operations:
+    - New node and edge
+    - New edge
+    """
+    try:
+        graph_id = ObjectId(graph_id)
+
+        graph = await db["graphs"].find_one(
+            {"_id": graph_id}, {"node_classes": 1, "edge_classes": 1}
+        )
+
+        if graph is None:
+            raise HTTPException(details="Graph not found")
+
+        # data = AddItemsBody(
+        #     head_name="hello",
+        #     head_type=str(random.choice(graph["node_classes"]).get("_id")),
+        #     edge=str(random.choice(graph["edge_classes"]).get("_id")),
+        #     tail_name="world",
+        #     tail_type=str(random.choice(graph["node_classes"]).get("_id")),
+        # )
+
+        print("data", data)
+
+        # Check if head / tail nodes exist in the db
+        head_node = await db["nodes"].find_one(
+            {
+                "graph_id": graph_id,
+                "name": data.head_name,
+                "type": ObjectId(data.head_type),
+            }
+        )
+
+        print("head exists" if head_node else "head does not exist")
+
+        tail_node = await db["nodes"].find_one(
+            {
+                "graph_id": graph_id,
+                "name": data.tail_name,
+                "type": ObjectId(data.tail_type),
+            }
+        )
+        print("tail exists" if tail_node else "tail does not exist")
+
+        if head_node and tail_node:
+            # head and tail exist - need to check whether the edge exists between them. If so, do nothing, else create triple.
+            print("Checking whether edge exists")
+
+            # Get all triples with head/tail combination then check edge existence... checks both directions...
+            triples = (
+                await db["triples"]
+                .find(
+                    {
+                        "head": {"$in": [head_node["_id"], tail_node["_id"]]},
+                        "tail": {"$in": [head_node["_id"], tail_node["_id"]]},
+                    }
+                    # {
+                    #     "$or": [
+                    #         {
+                    #             "$and": [
+                    #                 {"head": head_node["_id"]},
+                    #                 {"tail": tail_node["_id"]},
+                    #             ]
+                    #         },
+                    #         {
+                    #             "$and": [
+                    #                 {"head": tail_node["_id"]},
+                    #                 {"tail": head_node["_id"]},
+                    #             ]
+                    #         },
+                    #     ]
+                    # }
+                )
+                .to_list(None)
+            )
+
+            print(f"Found {len(triples)} triples that match head/tail nodes")
+
+            if len(triples) != 0:
+                return {"triple_exists": True}
+
+            head_node_id = head_node["_id"]
+            tail_node_id = tail_node["_id"]
+
+            print("headId", head_node_id, "tailId", tail_node_id)
+
+        else:
+            # Otherwise, just create a new triple in the graph
+            print("Creating new item")
+
+            # TODO: get data model for create nodes to insert properly...
+            if head_node is None:
+                # Create head node
+                new_head_node = graph_model.CreateItem(
+                    name=data.head_name,
+                    type=ObjectId(data.head_type),
+                    value=1,
+                    graph_id=graph_id,
+                )
+                print(f"Creating head node: {new_head_node}")
+
+                head_node = await db["nodes"].insert_one(new_head_node.dict())
+                head_node_id = head_node.inserted_id
+                print(f"Created head node: {head_node_id}")
+            else:
+                # Head exists, get the id
+                head_node_id = head_node["_id"]
+
+            if tail_node is None:
+                # Create tail node
+                new_tail_node = graph_model.CreateItem(
+                    name=data.tail_name,
+                    type=ObjectId(data.tail_type),
+                    value=1,
+                    graph_id=graph_id,
+                )
+                print(f"Creating tail node: {new_tail_node}")
+
+                tail_node = await db["nodes"].insert_one(new_tail_node.dict())
+                tail_node_id = tail_node.inserted_id
+                print(f"Created tail node: {tail_node_id}")
+            else:
+                # Tail exists, get the id
+                tail_node_id = tail_node["_id"]
+
+        # Create edge...
+        new_edge = graph_model.CreateItem(
+            type=ObjectId(data.edge), value=1, graph_id=graph_id
+        )
+        print(f"Creating edge: {new_edge}")
+        edge = await db["edges"].insert_one(new_edge.dict())
+        edge_id = edge.inserted_id
+        print(f"Created edge: {edge_id}")
+
+        print("Creating triple")
+        # Create triple...
+        new_triple = graph_model.CreateTriple(
+            head=head_node_id, edge=edge_id, tail=tail_node_id, graph_id=graph_id
+        )
+        print(f"Creating triple: {new_triple}")
+        triple = await db["triples"].insert_one(new_triple.dict())
+        triple_id = triple.inserted_id
+        print(f"Created triple: {triple_id}")
+
+        output = {"head": head_node, "edge": edge, "tail": tail_node}
+
+        print("output", output)
+
+        return {
+            "triple_exists": False,
+            "nodes": {str(head_node_id): {}, str(tail_node_id): {}},
+            "links": {},
+        }
+
+    except Exception as e:
+        print(f"Exception: {e}")
