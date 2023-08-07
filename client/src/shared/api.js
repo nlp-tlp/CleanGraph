@@ -1,7 +1,6 @@
 import axios from "axios";
 
 export const updateItem = (itemId, itemType, data) => {
-  console.log("api updateItem", itemId, itemType, data);
   return axios.patch(`/graph/${itemId}?item_type=${itemType}`, data);
 };
 
@@ -21,12 +20,6 @@ export const getGraphData = (graphId) => {
 
 export const updateSettings = (graphId, data) => {
   return axios.patch(`/graph/settings/${graphId}`, data);
-};
-
-export const getPage = (graphId, centralNodeId, newPage, limit) => {
-  return axios.get(`/graphs/${graphId}/${centralNodeId}`, {
-    params: { skip: newPage, limit: limit },
-  });
 };
 
 export const getPlugins = () => {
@@ -59,8 +52,10 @@ export const acknowledge = (
   });
 };
 
-export const getSubgraph = (graphId, nodeId) => {
-  return axios.get(`/graph/${graphId}/${nodeId}`);
+export const getSubgraph = ({ graphId, nodeId, page, limit }) => {
+  return axios.get(`/graph/sample/${graphId}`, {
+    params: { node_id: nodeId, skip: page, limit: limit },
+  });
 };
 
 export const deleteProperty = (isNode, itemId, propertyId) => {
@@ -118,4 +113,12 @@ export const updateClass = (graphId, isNode, name, color, classId) => {
     name: name,
     color: color,
   });
+};
+
+export const getGraphItems = (graphId) => {
+  return axios.get(`/graph/items/${graphId}`);
+};
+
+export const addGraphItem = (graphId, payload) => {
+  return axios.post(`/graph/item/${graphId}`, payload);
 };
