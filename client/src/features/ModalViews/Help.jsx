@@ -55,7 +55,7 @@ const Help = ({ handleClose }) => {
         </Stack>
       </Box>
       <Divider flexItem />
-      <Stack p={4} spacing={4}>
+      <Stack p={4} spacing={4} maxWidth={600}>
         <Box>
           <Typography fontWeight={700} gutterBottom>
             About CleanGraph
