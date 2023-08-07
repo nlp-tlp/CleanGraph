@@ -1,5 +1,7 @@
 # CleanGraph
 
+🎥 Click [here](https://youtu.be/zhf8XsV8cEg) to view a short video demonstration of CleanGraph.
+
 Correcting errors in knowledge graphs constructed from textual data is a formidable challenge using conventional tools like spreadsheet software, and is even an impossibility with platforms such as Neo4J. CleanGraph emerges as the solution to this issue by providing a platform designed for the efficient management of knowledge graphs, specifically those composed of semantic triples in the format of `<head, head_type, relation, tail, tail_type>`.
 
 CleanGraph is a robust, open-source, full-stack application that combines intuitive graph visualisation capabilities with comprehensive management features. Its frontend is built with React.js, promising a seamless, user-friendly experience with a responsive interface. Meanwhile, the backend utilises FastAPI - a cutting-edge, high-performance Python web framework, ensuring rapid and reliable application performance. For data storage, CleanGraph relies on SQLite, a lightweight, file-based database system that bolsters the application's efficiency.
@@ -11,8 +13,6 @@ _Please note that CleanGraph is specifically designed for creating, reading, upd
 ## Features
 
 - **Intuitive Interface**: CleanGraph provides an easy-to-use graphical interface that lets users create, edit, review, and manage graphs with ease.
-  <!-- - **Data Visualisation**: The application supports various types of data visualisations such as bar graphs, line graphs, pie charts, and more. -->
-  <!-- - **Data Analysis**: CleanGraph is not just about data representation but also provides tools for data analysis. -->
 - **Multi-Platform**: Works on any system that supports Python and Node.js, including Windows, macOS, and Linux.
 
 ## Installation
