@@ -1,30 +1,28 @@
-import { useState, useContext } from "react";
+import { useContext } from "react";
 import { Pagination as MUIPagination } from "@mui/material";
 import { GraphContext } from "../../shared/context";
 import { useParams } from "react-router-dom";
-import { getPage } from "../../shared/api";
+import { getSubgraph } from "../../shared/api";
 import { SnackbarContext } from "../../shared/snackbarContext";
 
-const Pagination = ({ page, setPage }) => {
+const Pagination = () => {
   const [state, dispatch] = useContext(GraphContext);
   const { graphId } = useParams();
-  // const [page, setPage] = useState(0);
   const { openSnackbar } = useContext(SnackbarContext);
 
   const handleChangePage = async (event, newPage) => {
     try {
-      const response = await getPage(
-        graphId,
-        state.centralNodeId,
-        newPage,
-        state.settings.graph.limit
-      );
+      const response = await getSubgraph({
+        graphId: graphId,
+        nodeId: state.centralNodeId,
+        page: newPage - 1,
+        limit: state.settings.graph.limit,
+      });
 
       if (response.status === 200) {
-        setPage(newPage);
         dispatch({
-          type: "SET_VALUE",
-          payload: { key: "data", value: response.data },
+          type: "PAGINATION",
+          payload: { ...response.data, page: newPage },
         });
       } else {
         throw new Error();
@@ -34,31 +32,16 @@ const Pagination = ({ page, setPage }) => {
     }
   };
 
-  // console.log(
-  //   state.maxTriples,
-  //   state.settings.graph.limit,
-  //   Math.ceil(state.maxTriples / state.settings.graph.limit)
-  // );
+  console.log("limit", state.settings.graph.limit);
 
   return (
     <MUIPagination
       count={Math.ceil(state.maxTriples / state.settings.graph.limit)}
-      page={page + 1} // Indexes from 1 unlike TablePagination which indexes from 0.
-      onPageChange={handleChangePage}
+      page={state.page}
+      onChange={handleChangePage}
       variant="outlined"
       size="small"
     />
-    // <TablePagination
-    //   component="div"
-    //   count={state.maxTriples}
-    //   page={page}
-    //   onPageChange={handleChangePage}
-    //   rowsPerPage={triplesPerPage}
-    //   onRowsPerPageChange={handleChangeTriplesPerPage}
-    //   labelRowsPerPage={"Graph Size"}
-    //   rowsPerPageOptions={[5, 10, 25, 100]}
-    //   style={{ zIndex: ZIndexes.level3 }}
-    // />
   );
 };
 
