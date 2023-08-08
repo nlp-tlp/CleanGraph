@@ -2,6 +2,7 @@
 
 ![Status](https://img.shields.io/badge/Status-Work%20in%20Progress-yellow)
 [![Demo](https://img.shields.io/badge/Demo-Available-blue)](https://youtu.be/zhf8XsV8cEg)
+[![Paper](https://img.shields.io/badge/Paper-View-green?style=flat&logo=adobeacrobatreader)](./paper.pdf)
 
 CleanGraph is designed to address the formidable challenge of correcting errors in knowledge graphs constructed from textual data—a task that often proves difficult using conventional tools like spreadsheet software or even specialised graph database software such as Neo4J.
 
@@ -44,3 +45,5 @@ CleanGraph is licensed under the terms of the MIT License. See [LICENSE](LICENSE
 - 🎥 Watch a [short video demonstration](https://youtu.be/zhf8XsV8cEg) of CleanGraph.
 
 - :construction: This project/documentation is currently under active development and may be subject to change. Contributions and issue reporting are welcome.
+
+- :wave: Explore the detailed systems demonstration in our paper on CleanGraph, available for viewing [here](./paper.pdf)
