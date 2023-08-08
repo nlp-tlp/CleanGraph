@@ -14,15 +14,15 @@
 - **Left Click on Graph Background Canvas**: Clicking on the blank space within the graph canvas will unselect any currently selected node or edge.
 
 <div style="display: flex; justify-content: center; align-items: center;">
-<figure style="text-align: center; margin-right: 20px;">
-  <img src="../media/CleanGraph_node_select_v1.gif" alt="Selected Node Animation" width="140"/>
-  <figcaption>Selected Node Animation</figcaption>
-</figure>
+  <div style="text-align: center; margin-right: 20px;">
+    <img src="../media/CleanGraph_node_select_v1.gif" alt="Selected Node Animation" width="140"/>
+    <p>Selected Node Animation</p>
+  </div>
 
-<figure style="text-align: center; margin-left: 20px;">
-  <img src="../media/CleanGraph_edge_select_v1.gif" alt="Selected Edge Animation" width="300"/>
-  <figcaption>Selected Edge Animation</figcaption>
-</figure>
+  <div style="text-align: center; margin-left: 20px;">
+    <img src="../media/CleanGraph_edge_select_v1.gif" alt="Selected Edge Animation" width="300"/>
+    <p>Selected Edge Animation</p>
+  </div>
 </div>
 
 ### Activation and Deactivation
@@ -31,10 +31,10 @@
   - **Deactivate (If Active)**: Performs a 1-hop deactivation on the node or edge, changing its color to the deactivated color (default red).
   - **Activate (If Deactivated)**: Toggles the node or edge to the active state, reverting it to the standard color.
 
-<figure style="text-align: center">
+<div style="text-align: center">
   <img src="../media/CleanGraph_node_1hop_deactivate_v1.gif" alt="1hop node deactivate" width="400"/>
-  <figcaption>Activated and deactivated subgraph with 1-hop propagation</figcaption>
-</figure>
+  <p>Activated and deactivated subgraph with 1-hop propagation</p>
+</div>
 
 ### Reviewing Nodes and Edges
 
@@ -43,15 +43,15 @@
   - **Visual Indication**: Reviewed nodes and edges will be visually distinguished. For example, unreviewed items may have a dashed border (nodes) or dashed edge, while reviewed items will have a solid appearance.
 
 <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
-<figure style="text-align: center">
-  <img src="../media/unreviewed_nodes_and_edge_v1.png" alt="Unreviewed subgraph" width="300"/>
-  <figcaption>Unreviewed subgraph (dashed node border and edge)</figcaption>
-</figure>
+  <div style="text-align: center">
+    <img src="../media/unreviewed_nodes_and_edge_v1.png" alt="Unreviewed subgraph" width="300"/>
+    <p>Unreviewed subgraph (dashed node border and edge)</p>
+  </div>
 
-<figure style="text-align: center">
-  <img src="../media/reviewed_nodes_and_edge_v1.png" alt="Reviewed subgraph" width="300"/>
-  <figcaption>Reviewed subgraph (solid node border and edge)</figcaption>
-</figure>
+  <div style="text-align: center">
+    <img src="../media/reviewed_nodes_and_edge_v1.png" alt="Reviewed subgraph" width="300"/>
+    <p>Reviewed subgraph (solid node border and edge)</p>
+  </div>
 </div>
 
 ## Graph Creation in CleanGraph
