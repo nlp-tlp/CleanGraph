@@ -20,7 +20,7 @@ def set_logger():
     logger.add(
         sys.stdout,
         colorize=True,
-        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <level>{message}</level>",
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{file}:{line}</cyan> | <level>{message}</level>",
         level="INFO",
         enqueue=True,
     )
@@ -50,7 +50,7 @@ def set_logger():
 set_logger()
 
 
-origins = ["http://localhost:3000", "localhost:3000"]
+origins = ["*"]
 
 app = FastAPI(title="CleanGraph API", version="1.0.0", dependencies=[])
 
@@ -58,7 +58,7 @@ app.add_middleware(LoguruMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
