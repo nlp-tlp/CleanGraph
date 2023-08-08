@@ -16,7 +16,7 @@ _Please note: CleanGraph is specifically tailored for creating, reading, updatin
 ## Features
 
 - **Intuitive Interface**: CleanGraph provides an easy-to-use graphical interface that lets users create, edit, review, and manage graphs with ease.
-- **Multi-Platform**: Works on any system that supports Python and Node.js, including Windows, macOS, and Linux.
+- **Multi-Platform**: Works on any system that supports Python and Node.js, including Windows, macOS, and Linux. Works best in Google Chrome browser.
 
 ## Documentation
 
