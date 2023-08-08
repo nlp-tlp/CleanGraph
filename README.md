@@ -7,6 +7,10 @@ CleanGraph is designed to address the formidable challenge of correcting errors 
 
 ## Overview
 
+<div style="display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 1rem;">
+    <img src="./docs/media/ui_overview_v1.png" alt="CleanGraph user interface QRG">
+    <p>CleanGraph User Interface - Quick Reference Guide</p>
+</div>
 CleanGraph emerges as a solution by providing a robust, open-source, full-stack platform tailored for the efficient management of knowledge graphs, particularly those composed of semantic triples extracted from text.
 
 It combines intuitive graph visualisation capabilities with comprehensive management features, including knowledge graph refinement and completion plugins. The frontend is built with React.js, offering a seamless, user-friendly experience with a responsive interface, while the backend relies on FastAPI—a cutting-edge, high-performance Python web framework—to ensure rapid and reliable performance. For data storage, CleanGraph employs MongoDB, a NoSQL, document-based database system.
