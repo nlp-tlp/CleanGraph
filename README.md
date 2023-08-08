@@ -3,7 +3,7 @@
 ![Status](https://img.shields.io/badge/Status-Work%20in%20Progress-yellow)
 [![Demo](https://img.shields.io/badge/Demo-Available-blue)](https://youtu.be/zhf8XsV8cEg)
 
-CleanGraph is designed to address the formidable challenge of correcting errors in knowledge graphs constructed from textual data—a task that often proves difficult using conventional tools like spreadsheet software or even specialized graph database software such as Neo4J.
+CleanGraph is designed to address the formidable challenge of correcting errors in knowledge graphs constructed from textual data—a task that often proves difficult using conventional tools like spreadsheet software or even specialised graph database software such as Neo4J.
 
 ## Overview
 
@@ -25,6 +25,7 @@ _Please note: CleanGraph is specifically tailored for creating, reading, updatin
 ## Documentation
 
 - [Getting Started](./docs/docs/getting_started.md)
+- [Interface](./docs/docs/interface.md)
 - [User Guide](./docs/docs/user_guide.md)
 - [Plugins](./docs/docs/plugins.md)
 - [Tutorial (coming soon!)](./docs/docs/tutorial.md)
