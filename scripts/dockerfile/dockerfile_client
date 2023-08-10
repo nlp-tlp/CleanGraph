@@ -9,6 +9,3 @@ COPY /client/package.json ./
 
 # Copy the content of the local src directory to the working directory
 COPY ./client .
-
-# Specify the command to run on container start
-CMD ["npm", "start"]

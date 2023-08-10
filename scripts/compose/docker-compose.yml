@@ -43,7 +43,12 @@ services:
     build:
       context: ../../
       dockerfile: ./scripts/dockerfile/dockerfile_client
-    command: npm run start
+    command:
+      - /bin/sh
+      - -c
+      - |
+        npm install --no-package-lock
+        npm run start
     container_name: clean_graph_client
     platform: linux/x86_64
     volumes:
@@ -62,4 +67,3 @@ volumes:
 
 networks:
   cleangraph:
-    external: true
