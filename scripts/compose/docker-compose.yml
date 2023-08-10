@@ -18,8 +18,6 @@ services:
       - "8000:8000"
     volumes:
       - ../../server:/app
-    links:
-      - mongodb
     networks:
       cleangraph:
         aliases:
@@ -51,12 +49,12 @@ services:
         npm run start
     container_name: clean_graph_client
     platform: linux/x86_64
+    environment:
+      REACT_APP_SERVER_URL: http://server.local:8000
     volumes:
       - ../../client:/app
     ports:
       - "3000:3000"
-    links:
-      - server
     networks:
       cleangraph:
         aliases:
