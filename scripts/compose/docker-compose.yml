@@ -5,7 +5,7 @@ services:
     build:
       context: ../../
       dockerfile: ./scripts/dockerfile/dockerfile_server
-    command: uvicorn --host 0.0.0.0 main:app
+    command: uvicorn --host 0.0.0.0 --reload main:app
     container_name: clean_graph_server
     platform: linux/x86_64
     environment:

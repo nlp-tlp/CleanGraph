@@ -50,7 +50,7 @@ def set_logger():
 set_logger()
 
 
-origins = ["*"]
+origins = ["http://localhost:3000", "localhost:3000"]
 
 app = FastAPI(title="CleanGraph API", version="1.0.0", dependencies=[])
 
@@ -58,7 +58,7 @@ app.add_middleware(LoguruMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
