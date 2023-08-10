@@ -1,0 +1,67 @@
+version: "3"
+
+services:
+  server:
+    build:
+      context: ../../
+      dockerfile: ./scripts/dockerfile/dockerfile_server
+    command: uvicorn --host 0.0.0.0 --reload main:app
+    container_name: clean_graph_server
+    platform: linux/x86_64
+    environment:
+      MONGO_DB_USERNAME: root
+      MONGO_DB_PASSWORD: examplepassword
+      MONGO_CLUSTER_NAME: ""
+      MONGO_DB_NAME: "cleangraph"
+      MONGO_URI: mongodb://root:examplepassword@mongo.local:27017
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../../server:/app
+    networks:
+      cleangraph:
+        aliases:
+          - server.local
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: examplepassword
+    networks:
+      cleangraph:
+        aliases:
+          - mongo.local
+
+  client:
+    build:
+      context: ../../
+      dockerfile: ./scripts/dockerfile/dockerfile_client
+    command:
+      - /bin/sh
+      - -c
+      - |
+        npm install --no-package-lock
+        npm run start
+    container_name: clean_graph_client
+    platform: linux/x86_64
+    environment:
+      REACT_APP_SERVER_URL: http://server.local:8000
+    volumes:
+      - ../../client:/app
+    ports:
+      - "3000:3000"
+    networks:
+      cleangraph:
+        aliases:
+          - client.local
+
+volumes:
+  mongodb_data:
+
+networks:
+  cleangraph:

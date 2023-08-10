@@ -37,6 +37,20 @@ First, clone the CleanGraph repository to your local machine:
 git clone https://github.com/nlp-tlp/CleanGraph
 ```
 
+
+## Alternative step 2: use docker and docker-compose to spin up the project
+
+First, you will need to have `docker` and `docker-compose`
+Then you can run the following command to spin up the project
+
+```bash
+docker-compose -f scripts/compose/docker-compose.yml up
+```
+It will take a while for the first time to spin up the project, but after that, it will be much faster.
+The reason is that the docker image will be cached locally, also the `npm install` will take a while to install all the dependencies.
+
+If you get this step done successfully, you can skip the rest of the steps to spin up the project.
+
 ## Step 2: Setup the Client
 
 Navigate into the `client/` directory. Install the client dependencies by running:

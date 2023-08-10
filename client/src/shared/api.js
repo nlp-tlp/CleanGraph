@@ -1,5 +1,12 @@
 import axios from "axios";
 
+// to get frontend and backend can be deployed in different ways
+// we need to set the base url for axios
+
+// if there is a server host env variable, use that
+// otherwise, use localhost
+axios.defaults.baseURL = process.env.REACT_APP_SERVER_HOST || "http://localhost:8000";
+
 export const updateItem = (itemId, itemType, data) => {
   return axios.patch(`/graph/${itemId}?item_type=${itemType}`, data);
 };
@@ -23,19 +30,19 @@ export const updateSettings = (graphId, data) => {
 };
 
 export const getPlugins = () => {
-  return axios.get("/plugin");
+  return axios.get("/plugin/");
 };
 
 export const createGraph = (data) => {
-  return axios.post("/graph", data);
+  return axios.post("/graph/", data);
 };
 
 export const getGraphs = () => {
-  return axios.get("/graph");
+  return axios.get("/graph/");
 };
 
 export const deleteGraph = (graphId) => {
-  return axios.delete(`/graph/${graphId}`);
+  return axios.delete(`/graph/${graphId}/`);
 };
 
 export const acknowledge = (
